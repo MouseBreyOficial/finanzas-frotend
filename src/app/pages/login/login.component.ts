@@ -1,0 +1,92 @@
+import { Component, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
+import { InputTextModule } from 'primeng/inputtext';
+import { PasswordModule } from 'primeng/password';
+import { ButtonModule } from 'primeng/button';
+import { MessageModule } from 'primeng/message';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [ReactiveFormsModule, RouterLink, InputTextModule, PasswordModule, ButtonModule, MessageModule],
+  template: `
+    <div class="auth-page">
+      <div class="auth-card">
+        <h1 class="auth-title">Finanzas Personales</h1>
+        <p class="auth-subtitle">Inicia sesión para administrar tus finanzas.</p>
+
+        @if (errorMessage) {
+          <p-message severity="error" styleClass="w-full mb-3">{{ errorMessage }}</p-message>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="field">
+            <label for="username">Usuario</label>
+            <input id="username" pInputText formControlName="username" autocomplete="username" />
+            @if (form.controls.username.touched && form.controls.username.invalid) {
+              <small class="error-text">Ingresa tu usuario.</small>
+            }
+          </div>
+
+          <div class="field" style="margin-top: 1rem">
+            <label for="password">Contraseña</label>
+            <p-password inputId="password" formControlName="password" [feedback]="false"
+              [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+            @if (form.controls.password.touched && form.controls.password.invalid) {
+              <small class="error-text">Ingresa tu contraseña.</small>
+            }
+          </div>
+
+          <div class="auth-actions">
+            <p-button type="submit" label="Ingresar" icon="pi pi-sign-in"
+              [loading]="loading" [disabled]="form.invalid || loading" />
+            <p-button type="button" label="Crear cuenta" [outlined]="true"
+              routerLink="/registro" />
+          </div>
+        </form>
+      </div>
+    </div>
+  `
+})
+export class LoginComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  loading = false;
+  errorMessage = '';
+
+  readonly form = this.fb.nonNullable.group({
+    username: ['', Validators.required],
+    password: ['', Validators.required]
+  });
+
+  constructor() {
+    if (this.route.snapshot.queryParamMap.get('expired')) {
+      this.errorMessage = 'Tu sesión expiró. Ingresa nuevamente.';
+    }
+  }
+
+  submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.auth.login(this.form.getRawValue()).pipe(
+      finalize(() => this.loading = false)
+    ).subscribe({
+      next: () => void this.router.navigate(['/dashboard']),
+      error: (error) => {
+        this.errorMessage = error?.error?.mensaje ?? 'Usuario o contraseña incorrectos.';
+      }
+    });
+  }
+}
