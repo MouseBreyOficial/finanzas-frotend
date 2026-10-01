@@ -15,7 +15,7 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="auth-page">
       <div class="auth-card">
-        <h1 class="auth-title">Finanzas Personales</h1>
+        <h1 class="auth-title text-center">Finanzas Personales</h1>
         <p class="auth-subtitle">Inicia sesión para administrar tus finanzas.</p>
 
         @if (errorMessage) {
@@ -25,7 +25,7 @@ import { AuthService } from '../../core/services/auth.service';
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="field">
             <label for="username">Usuario</label>
-            <input id="username" pInputText formControlName="username" autocomplete="username" />
+            <input id="username" pInputText formControlName="username" autocomplete="username" placeholder="Ingrese su nombre de usuario"/>
             @if (form.controls.username.touched && form.controls.username.invalid) {
               <small class="error-text">Ingresa tu usuario.</small>
             }
@@ -34,16 +34,16 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="field" style="margin-top: 1rem">
             <label for="password">Contraseña</label>
             <p-password inputId="password" formControlName="password" [feedback]="false"
-              [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+              [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" placeholder="Ingrese su contraseña"/>
             @if (form.controls.password.touched && form.controls.password.invalid) {
               <small class="error-text">Ingresa tu contraseña.</small>
             }
           </div>
 
-          <div class="auth-actions">
+          <div class="field full pt-2">
             <p-button type="submit" label="Ingresar" icon="pi pi-sign-in"
-              [loading]="loading" [disabled]="form.invalid || loading" />
-            <p-button type="button" label="Crear cuenta" [outlined]="true"
+              [loading]="loading" [disabled]="form.invalid || loading" [fluid]="true"/>
+            <p-button type="button" label="Crear cuenta" [outlined]="true" [fluid]="true"
               routerLink="/registro" />
           </div>
         </form>

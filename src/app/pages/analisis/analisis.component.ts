@@ -1,3 +1,162 @@
-import {Component,inject,OnInit} from '@angular/core';import {finalize} from 'rxjs';import {CurrencyPipe,DatePipe,DecimalPipe} from '@angular/common';import {FormsModule} from '@angular/forms';import {ChartModule} from 'primeng/chart';import {DatePickerModule} from 'primeng/datepicker';import {ButtonModule} from 'primeng/button';import {TableModule} from 'primeng/table';import {DialogModule} from 'primeng/dialog';import {MessageModule} from 'primeng/message';import {GastoService} from '../../core/services/gasto.service';import {CuentaService} from '../../core/services/cuenta.service';import {AuthService} from '../../core/services/auth.service';import {CuentaResponse,GastoResumen,GastoResponse} from '../../core/models/api.models';
-@Component({selector:'app-analisis',standalone:true,imports:[CurrencyPipe,DatePipe,DecimalPipe,FormsModule,ChartModule,DatePickerModule,ButtonModule,TableModule,DialogModule,MessageModule],template:`<section class="page analysis-page"><div class="page-header"><div><div class="eyebrow">ANÁLISIS</div><h1>Resumen de gastos</h1><p class="muted">Descubre en qué categorías estás gastando y revisa el detalle de cada una.</p></div></div><div class="card analysis-filter"><div class="analysis-filter-row"><div class="field"><label>Desde</label><p-datepicker [(ngModel)]="desde" [showIcon]="true" appendTo="body"/></div><div class="field"><label>Hasta</label><p-datepicker [(ngModel)]="hasta" [showIcon]="true" appendTo="body"/></div><div class="analysis-filter-action"><p-button label="Consultar" icon="pi pi-search" [loading]="loading" [disabled]="loading" (onClick)="load()"/></div></div></div>@if(data){<div class="stats-grid analysis-stats"><div class="stat-card"><span>Total gastado</span><strong>{{data.total|currency:'PEN':'S/ '}}</strong></div><div class="stat-card"><span>Movimientos</span><strong>{{data.cantidad}}</strong></div><div class="stat-card"><span>Promedio por día</span><strong>{{promedioDiario|currency:'PEN':'S/ '}}</strong><small class="muted">Total gastado ÷ {{diasRango}} día(s) del rango</small></div></div><div class="analysis-charts"><div class="card analysis-chart-card"><h3>Gasto por día</h3><div class="analysis-chart-body"><p-chart type="bar" [data]="dayChart" [options]="dayChartOptions"/></div></div><div class="card analysis-chart-card"><h3>Distribución por categoría</h3><div class="analysis-chart-body"><p-chart type="doughnut" [data]="catChart" [options]="smallChartOptions"/></div></div></div><div class="card analysis-table-card"><h3>Gastos por categoría</h3><p class="muted">Haz clic en una categoría para ver todos sus movimientos dentro del rango seleccionado.</p><p-table [value]="categoryRows" [loading]="loading"><ng-template #header><tr><th>Categoría</th><th>Movimientos</th><th>Total</th><th>% del gasto</th></tr></ng-template><ng-template #body let-r><tr style="cursor:pointer" (click)="openCategory(r.categoria)"><td><strong>{{r.categoria}}</strong></td><td>{{r.cantidad}}</td><td>{{r.total|currency:'PEN':'S/ '}}</td><td>{{r.porcentaje|number:'1.1-1'}}%</td></tr></ng-template></p-table></div>}<p-dialog [(visible)]="detailVisible" [header]="'Detalle · '+selectedCategory" [modal]="true" [style]="{width:'min(850px,96vw)'}"><div class="stats-grid"><div class="stat-card"><span>Total categoría</span><strong>{{selectedTotal|currency:'PEN':'S/ '}}</strong></div><div class="stat-card"><span>Movimientos</span><strong>{{selectedDetails.length}}</strong></div></div><p-table [value]="selectedDetails" [paginator]="true" [rows]="8"><ng-template #header><tr><th>Fecha</th><th>Cuenta</th><th>Descripción</th><th>Monto</th></tr></ng-template><ng-template #body let-g><tr><td>{{g.fecha|date:'dd/MM/yyyy'}}</td><td>{{accountName(g.idCuenta)}}</td><td>{{g.descripcion}}</td><td>{{g.monto|currency:'PEN':'S/ '}}</td></tr></ng-template><ng-template #emptymessage><tr><td colspan="4">No hay movimientos para esta categoría.</td></tr></ng-template></p-table></p-dialog></section>`})
-export class AnalisisComponent implements OnInit{private service=inject(GastoService);private cuentasService=inject(CuentaService);private auth=inject(AuthService);desde=new Date(new Date().getFullYear(),new Date().getMonth(),1);hasta=new Date();data:GastoResumen|null=null;cuentas:CuentaResponse[]=[];dayChart:any;catChart:any;detailVisible=false;selectedCategory='';selectedDetails:GastoResponse[]=[];loading=false;smallChartOptions:any={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}};dayChartOptions:any={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:(ctx:any)=>`S/ ${Number(ctx.raw||0).toFixed(2)}`}}},scales:{y:{beginAtZero:true,ticks:{callback:(value:any)=>`S/ ${value}`}}}};ngOnInit(){this.auth.resolveUserId().subscribe(id=>{if(id)this.cuentasService.listarPorUsuario(id).subscribe(c=>this.cuentas=c)});this.load()}fmt(d:Date){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}load(){if(this.loading)return;this.loading=true;this.auth.resolveUserId().subscribe({next:id=>{if(!id){this.loading=false;return;}this.service.resumen(id,this.fmt(this.desde),this.fmt(this.hasta)).pipe(finalize(()=>this.loading=false)).subscribe({next:d=>{this.data=d;const dailyValues=Object.values(d.porDia).map(v=>Number(v||0));const axis=this.axisScale(dailyValues);this.dayChartOptions={...this.dayChartOptions,scales:{y:{beginAtZero:true,max:axis.max,ticks:{stepSize:axis.step,callback:(value:any)=>`S/ ${value}`}}}};this.dayChart={labels:Object.keys(d.porDia),datasets:[{label:'Gastos',data:dailyValues,maxBarThickness:72,categoryPercentage:.72,barPercentage:.75}]};this.catChart={labels:Object.keys(d.porCategoria),datasets:[{data:Object.values(d.porCategoria)}]};},error:()=>{}});},error:()=>{this.loading=false;}});}axisScale(values:number[]){const highest=Math.max(0,...values);if(highest<=0)return{max:100,step:20};const rough=highest/5;const magnitude=Math.pow(10,Math.floor(Math.log10(rough)));const normalized=rough/magnitude;const nice=normalized<=1?1:normalized<=2?2:normalized<=5?5:10;const step=nice*magnitude;return{max:Math.ceil(highest/step)*step,step}}get diasRango(){return Math.max(1,Math.floor((this.hasta.getTime()-this.desde.getTime())/86400000)+1)}get promedioDiario(){if(!this.data)return 0;return Number(this.data.total||0)/this.diasRango}get categoryRows(){if(!this.data)return[];const total=Number(this.data.total||0);return Object.entries(this.data.porCategoria).map(([categoria,monto])=>({categoria,total:Number(monto),cantidad:(this.data?.detalles||[]).filter(g=>g.categoria===categoria).length,porcentaje:total?Number(monto)*100/total:0})).sort((a,b)=>b.total-a.total)}openCategory(c:string){this.selectedCategory=c;this.selectedDetails=(this.data?.detalles||[]).filter(g=>g.categoria===c).sort((a,b)=>b.fecha.localeCompare(a.fecha));this.detailVisible=true}get selectedTotal(){return this.selectedDetails.reduce((s,g)=>s+Number(g.monto||0),0)}accountName(id:number){return this.cuentas.find(c=>c.id===id)?.nombreCuenta??`Cuenta #${id}`}}
+import {Component,inject,OnInit} from '@angular/core';
+import {finalize} from 'rxjs';
+import {CurrencyPipe,DatePipe,DecimalPipe} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {ChartModule} from 'primeng/chart';
+import {DatePickerModule} from 'primeng/datepicker';
+import {ButtonModule} from 'primeng/button';
+import {TableModule} from 'primeng/table';
+import {DialogModule} from 'primeng/dialog';
+import {MessageModule} from 'primeng/message';
+import {GastoService} from '../../core/services/gasto.service';
+import {CuentaService} from '../../core/services/cuenta.service';
+import {AuthService} from '../../core/services/auth.service';
+import {CuentaResponse,GastoResumen,GastoResponse} from '../../core/models/api.models';
+@Component({
+    selector:'app-analisis',
+    standalone:true,
+    imports:[
+        CurrencyPipe,
+        DatePipe,
+        DecimalPipe,
+        FormsModule,
+        ChartModule,
+        DatePickerModule,
+        ButtonModule,
+        TableModule,
+        DialogModule,
+        MessageModule
+    ],
+    template:`
+    <section class="page analysis-page">
+        <div class="page-header"><div><div class="eyebrow">ANÁLISIS</div>
+        <h1>Resumen de gastos</h1><p class="muted">Descubre en qué categorías estás gastando y revisa el detalle de cada una.</p></div>
+        </div>
+        <div class="card analysis-filter">
+            <div class="analysis-filter-row">
+                <div class="field"><label>Desde</label><p-datepicker [(ngModel)]="desde" [showIcon]="true" appendTo="body"/></div>
+                <div class="field"><label>Hasta</label><p-datepicker [(ngModel)]="hasta" [showIcon]="true" appendTo="body"/></div>
+                <div class="analysis-filter-action"><p-button label="Consultar" icon="pi pi-search" [loading]="loading" [disabled]="loading" (onClick)="load()"/></div>
+            </div>
+        </div>
+        @if(data){
+            <div class="stats-grid analysis-stats">
+                <div class="stat-card"><span>Total gastado</span><strong>{{data.total|currency:'PEN':'S/ '}}</strong></div>
+                <div class="stat-card"><span>Movimientos</span><strong>{{data.cantidad}}</strong></div>
+                <div class="stat-card"><span>Promedio por día</span><strong>{{promedioDiario|currency:'PEN':'S/ '}}</strong><small class="muted">Total gastado ÷ {{diasRango}} día(s) del rango</small></div>
+            </div>
+            <div class="analysis-charts">
+                <div class="card analysis-chart-card"><h3>Gasto por día</h3>
+                    <div class="analysis-chart-body"><p-chart type="bar" [data]="dayChart" [options]="dayChartOptions"/>
+                    </div>
+                </div>
+                <div class="card analysis-chart-card"><h3>Distribución por categoría</h3>
+                    <div class="analysis-chart-body"><p-chart type="doughnut" [data]="catChart" [options]="smallChartOptions"/></div>
+                </div>
+            </div>
+            <div class="card analysis-table-card"><h3>Gastos por categoría</h3><p class="muted">Haz clic en una categoría para ver todos sus movimientos dentro del rango seleccionado.</p>
+                <p-table [value]="categoryRows" [loading]="loading">
+                    <ng-template #header><tr><th>Categoría</th><th>Movimientos</th><th>Total</th><th>% del gasto</th></tr></ng-template>
+                    <ng-template #body let-r><tr style="cursor:pointer" (click)="openCategory(r.categoria)">
+                        <td><strong>{{r.categoria}}</strong></td><td>{{r.cantidad}}</td>
+                        <td>{{r.total|currency:'PEN':'S/ '}}</td><td>{{r.porcentaje|number:'1.1-1'}}%</td></tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        }
+        
+        <p-dialog [(visible)]="detailVisible" [header]="'Detalle · '+selectedCategory" [modal]="true" 
+        [style]="{width:'min(850px,96vw)'}">
+            <div class="stats-grid">
+                <div class="stat-card"><span>Total categoría</span><strong>{{selectedTotal|currency:'PEN':'S/ '}}</strong></div>
+                <div class="stat-card"><span>Movimientos</span><strong>{{selectedDetails.length}}</strong></div>
+            </div>
+            <p-table [value]="selectedDetails" [paginator]="true" [rows]="8">
+                <ng-template #header><tr><th>Fecha</th><th>Cuenta</th><th>Descripción</th><th>Monto</th></tr></ng-template>
+                <ng-template #body let-g><tr><td>{{g.fecha|date:'dd/MM/yyyy'}}</td><td>{{accountName(g.idCuenta)}}</td>
+                <td>{{g.descripcion}}</td><td>{{g.monto|currency:'PEN':'S/ '}}</td></tr></ng-template>
+                <ng-template #emptymessage><tr><td colspan="4">No hay movimientos para esta categoría.</td></tr></ng-template>
+            </p-table>
+        </p-dialog>
+    </section>`})
+export class AnalisisComponent implements OnInit{
+    private service=inject(GastoService);
+    private cuentasService=inject(CuentaService);
+    private auth=inject(AuthService);
+    desde=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+    hasta=new Date();
+    data:GastoResumen|null=null;cuentas:CuentaResponse[]=[];
+    dayChart:any;
+    catChart:any;
+    detailVisible=false;
+    selectedCategory='';
+    selectedDetails:GastoResponse[]=[];
+    loading=false;
+    smallChartOptions:any={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}};
+    dayChartOptions:any={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:(ctx:any)=>`S/ ${Number(ctx.raw||0).toFixed(2)}`}}},scales:{y:{beginAtZero:true,ticks:{callback:(value:any)=>`S/ ${value}`}}}};
+    
+    ngOnInit(){
+        this.auth.resolveUserId().subscribe(id=>{if(id)this.cuentasService.listarPorUsuario(id).subscribe(c=>this.cuentas=c)});
+        this.load()}fmt(d:Date){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    }
+    
+    load(){
+        if(this.loading)return;
+        
+        this.loading=true;
+        this.auth.resolveUserId().subscribe({next:id=>{if(!id){
+            this.loading=false;
+            return;
+        }
+        this.service.resumen(id,this.fmt(this.desde),this.fmt(this.hasta)).pipe(finalize(()=>this.loading=false)).subscribe({next:d=>{
+            this.data=d;
+            const dailyValues=Object.values(d.porDia).map(v=>Number(v||0));
+            const axis=this.axisScale(dailyValues);
+            this.dayChartOptions={...this.dayChartOptions,scales:{y:{beginAtZero:true,max:axis.max,ticks:{stepSize:axis.step,callback:(value:any)=>`S/ ${value}`}}}};
+            this.dayChart={labels:Object.keys(d.porDia),datasets:[{label:'Gastos',data:dailyValues,maxBarThickness:72,categoryPercentage:.72,barPercentage:.75}]};
+            this.catChart={labels:Object.keys(d.porCategoria),datasets:[{data:Object.values(d.porCategoria)}]};
+        },error:()=>{}});},error:()=>{this.loading=false;}});}axisScale(values:number[]){
+            const highest=Math.max(0,...values);
+            if(highest<=0)
+                return{max:100,step:20};
+            
+            const rough=highest/5;
+            const magnitude=Math.pow(10,Math.floor(Math.log10(rough)));
+            const normalized=rough/magnitude;
+            const nice=normalized<=1?1:normalized<=2?2:normalized<=5?5:10;
+            const step=nice*magnitude;
+            return{max:Math.ceil(highest/step)*step,step}
+        }
+        
+        get diasRango(){
+            return Math.max(1,Math.floor((this.hasta.getTime()-this.desde.getTime())/86400000)+1)
+        }
+        
+        get promedioDiario(){
+            if(!this.data)return 0;
+            
+            return Number(this.data.total||0)/this.diasRango
+        }
+        
+        get categoryRows(){
+            if(!this.data)return[];
+            
+            const total=Number(this.data.total||0);
+            return Object.entries(this.data.porCategoria).map(([categoria,monto])=>({categoria,total:Number(monto),cantidad:(this.data?.detalles||[]).filter(g=>g.categoria===categoria).length,porcentaje:total?Number(monto)*100/total:0})).sort((a,b)=>b.total-a.total)
+        }
+        
+        openCategory(c:string){
+            this.selectedCategory=c;
+            this.selectedDetails=(this.data?.detalles||[]).filter(g=>g.categoria===c).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+            this.detailVisible=true
+        }
+        
+        get selectedTotal(){
+            return this.selectedDetails.reduce((s,g)=>s+Number(g.monto||0),0)
+        }
+        
+        accountName(id:number){
+            return this.cuentas.find(c=>c.id===id)?.nombreCuenta??`Cuenta #${id}`
+        }
+    
+    }

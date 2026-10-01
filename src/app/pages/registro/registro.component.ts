@@ -26,30 +26,26 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="form-grid">
             <div class="field full">
               <label>Usuario</label>
-              <input pInputText formControlName="username" />
+              <input pInputText formControlName="username" placeholder="Ingrese el nombre de usuario"/>
             </div>
             <div class="field full">
               <label>Contraseña</label>
-              <p-password formControlName="password" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+              <p-password formControlName="password" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" placeholder="Ingrese una contraseña"/>
             </div>
             <div class="field full">
               <label>Nombre completo</label>
-              <input pInputText formControlName="nombreCompleto" />
+              <input pInputText formControlName="nombreCompleto" placeholder="Ingrese su nombre completo"/>
             </div>
             <div class="field full">
               <label>Correo electrónico</label>
-              <input pInputText type="email" formControlName="email" />
-            </div>
-            <div class="field full">
-              <label>Usuario de creación</label>
-              <input pInputText formControlName="usuarioCreacion" />
+              <input pInputText type="email" formControlName="email" placeholder="Ingrese su correo electrónico"/>
             </div>
           </div>
 
-          <div class="auth-actions">
-            <p-button type="submit" label="Registrarme" icon="pi pi-user-plus"
-              [loading]="loading" [disabled]="form.invalid || loading" />
-            <p-button type="button" label="Volver al login" [outlined]="true" routerLink="/login" />
+          <div class="field full pt-2">
+            <p-button type="submit" label="Registrarme" icon="pi pi-user-plus" class="pb-2 pt-2"
+              [loading]="loading" [disabled]="form.invalid || loading" [fluid]="true" />
+            <p-button type="button" label="Volver al login" [outlined]="true" routerLink="/login" [fluid]="true" />
           </div>
         </form>
       </div>
@@ -69,7 +65,7 @@ export class RegistroComponent {
     password: ['', [Validators.required, Validators.minLength(6)]],
     nombreCompleto: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    usuarioCreacion: ['', Validators.required]
+    usuarioCreacion: ['Web']
   });
 
   submit(): void {

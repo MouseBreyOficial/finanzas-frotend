@@ -2,15 +2,247 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { TableModule } from 'primeng/table'; import { TagModule } from 'primeng/tag'; import { ButtonModule } from 'primeng/button'; import { DialogModule } from 'primeng/dialog'; import { InputTextModule } from 'primeng/inputtext'; import { MessageModule } from 'primeng/message'; import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
-import { UsuarioService } from '../../core/services/usuario.service'; import { AuthService } from '../../core/services/auth.service'; import { UsuarioResponse } from '../../core/models/api.models';
-@Component({selector:'app-usuarios',standalone:true,imports:[FormsModule,ReactiveFormsModule,TableModule,TagModule,ButtonModule,DialogModule,InputTextModule,MessageModule,TooltipModule],template:`
-<section class="page"><div class="page-header"><div><div class="eyebrow">ADMINISTRACIÓN</div><h1>Usuarios</h1><p class="muted">Administra los usuarios registrados.</p></div><p-button label="Nuevo usuario" icon="pi pi-plus" (onClick)="openNew()" /></div>
-@if(errorMessage){<p-message severity="error" styleClass="w-full mb-3">{{errorMessage}}</p-message>}<div class="card table-card"><div class="table-toolbar"><div class="search-box"><i class="pi pi-search"></i><input pInputText [(ngModel)]="search" placeholder="Buscar usuario..." /></div></div>
-<p-table [value]="filteredUsuarios" [loading]="loading" [paginator]="true" [rows]="10"><ng-template #header><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Estado</th><th>Acciones</th></tr></ng-template><ng-template #body let-u><tr><td>#{{u.id}}</td><td><strong>{{u.nombreUsuario}}</strong></td><td>{{u.nombreCompleto}}</td><td>{{u.correoElectronico}}</td><td><p-tag [value]="u.estadoRegistro===1?'Activo':'Inactivo'" [severity]="u.estadoRegistro===1?'success':'secondary'" /></td><td><p-button icon="pi pi-eye" [text]="true" (onClick)="view(u)"/><p-button icon="pi pi-pencil" [text]="true" (onClick)="edit(u)"/>@if(!isAdministratorUser(u)){@if(u.estadoRegistro===1){<p-button icon="pi pi-user-minus" severity="danger" [text]="true" pTooltip="Desactivar" (onClick)="remove(u)"/>}@else{<p-button icon="pi pi-user-plus" severity="success" [text]="true" pTooltip="Activar" (onClick)="activate(u)"/>}}</td></tr></ng-template></p-table></div>
-<p-dialog [(visible)]="detailVisible" header="Detalle del usuario" [modal]="true" [style]="{width:'520px'}">@if(selected){<div class="detail-grid"><div><span>ID</span><strong>#{{selected.id}}</strong></div><div><span>Estado</span><strong>{{selected.estadoRegistro===1?'Activo':'Inactivo'}}</strong></div><div class="full"><span>Usuario</span><strong>{{selected.nombreUsuario}}</strong></div><div class="full"><span>Nombre completo</span><strong>{{selected.nombreCompleto}}</strong></div><div class="full"><span>Correo</span><strong>{{selected.correoElectronico}}</strong></div></div>}</p-dialog>
-<p-dialog [(visible)]="formVisible" [header]="editing?'Editar usuario':'Nuevo usuario'" [modal]="true" [style]="{width:'560px'}"><form [formGroup]="form" (ngSubmit)="save()"><div class="form-grid"><div class="field"><label>Usuario</label><input pInputText formControlName="nombreUsuario" [readonly]="!!editing"/>@if(editing){<small class="muted">El nombre de usuario no se puede modificar una vez creado.</small>}</div><div class="field"><label>Contraseña</label><input pInputText type="password" formControlName="hashContrasena" [placeholder]="editing ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'"/>@if(editing){<small class="muted">Déjala vacía para conservar la contraseña actual.</small>}</div><div class="field full"><label>Nombre completo</label><input pInputText formControlName="nombreCompleto"/></div><div class="field full"><label>Correo</label><input pInputText type="email" formControlName="correoElectronico"/></div></div><div class="actions"><p-button label="Cancelar" [text]="true" type="button" (onClick)="formVisible=false"/><p-button label="Guardar" type="submit" [disabled]="form.invalid"/></div></form></p-dialog>
-<p-dialog [(visible)]="deleteVisible" header="Confirmar baja de usuario" [modal]="true" [style]="{width:'min(480px, 95vw)'}"><div class="field"><p>¿Deseas desactivar al usuario <strong>{{pendingDelete?.nombreUsuario}}</strong>?</p><label>Motivo de baja</label><input pInputText [(ngModel)]="deleteReason" placeholder="Motivo de baja" /></div><div class="actions"><p-button label="Cancelar" [text]="true" (onClick)="cancelDelete()"/><p-button label="Aceptar" severity="danger" (onClick)="confirmDelete()"/></div></p-dialog></section>`})
-export class UsuariosComponent implements OnInit { private service=inject(UsuarioService); private auth=inject(AuthService); private fb=inject(FormBuilder); private messages=inject(MessageService); usuarios:UsuarioResponse[]=[]; loading=false; errorMessage='';search='';detailVisible=false;formVisible=false;selected:UsuarioResponse|null=null;editing:UsuarioResponse|null=null;deleteVisible=false;pendingDelete:UsuarioResponse|null=null;deleteReason='';
-form=this.fb.nonNullable.group({nombreUsuario:['',Validators.required],hashContrasena:[''],nombreCompleto:['',Validators.required],correoElectronico:['',[Validators.required,Validators.email]]}); get filteredUsuarios(){const q=this.search.toLowerCase().trim();return q?this.usuarios.filter(u=>`${u.nombreUsuario} ${u.nombreCompleto} ${u.correoElectronico}`.toLowerCase().includes(q)):this.usuarios;} ngOnInit(){this.load();} load(){this.loading=true;this.service.listar().subscribe({next:d=>{this.usuarios=d;this.loading=false},error:()=>{this.errorMessage='No se pudieron cargar los usuarios.';this.loading=false}})}
-isAdministratorUser(u:UsuarioResponse){return u.nombreUsuario.trim().toLowerCase()==='administrador';} activate(u:UsuarioResponse){this.service.activar(u.id,this.auth.getUsername()).subscribe({next:()=>{this.messages.add({severity:'success',summary:'Usuario activado',detail:`${u.nombreUsuario} fue activado correctamente.`,life:5000});this.load();},error:e=>this.messages.add({severity:'error',summary:'No se pudo activar',detail:e?.error?.mensaje??'No se pudo activar el usuario.',life:7000})});}
-view(u:UsuarioResponse){this.service.obtener(u.id).subscribe({next:d=>{this.selected=d;this.detailVisible=true},error:()=>this.errorMessage='No se pudo cargar el detalle.'});} openNew(){this.editing=null;this.form.reset({nombreUsuario:'',hashContrasena:'',nombreCompleto:'',correoElectronico:''});this.form.controls.nombreUsuario.enable();this.form.controls.hashContrasena.setValidators(Validators.required);this.form.controls.hashContrasena.updateValueAndValidity();this.formVisible=true;} edit(u:UsuarioResponse){this.editing=u;this.form.reset({nombreUsuario:u.nombreUsuario,hashContrasena:'',nombreCompleto:u.nombreCompleto,correoElectronico:u.correoElectronico});this.form.controls.nombreUsuario.disable();this.form.controls.hashContrasena.clearValidators();this.form.controls.hashContrasena.updateValueAndValidity();this.formVisible=true;} save(){if(this.form.invalid)return;const v=this.form.getRawValue();const req=this.editing?this.service.actualizar({id:this.editing.id,nombreCompleto:v.nombreCompleto,correoElectronico:v.correoElectronico,hashContrasena:v.hashContrasena?.trim()||undefined,usuarioModificacion:this.auth.getUsername()}):this.service.registrar({nombreUsuario:v.nombreUsuario,hashContrasena:v.hashContrasena,nombreCompleto:v.nombreCompleto,correoElectronico:v.correoElectronico,usuarioCreacion:this.auth.getUsername()});req.subscribe({next:()=>{this.formVisible=false;this.messages.add({severity:'success',summary:'Usuario',detail:this.editing?'Usuario actualizado correctamente.':'Usuario registrado correctamente.',life:5000});this.load()},error:e=>{const mensaje=e?.error?.mensaje??e?.error?.message??'No se pudo guardar el usuario.';this.messages.add({severity:'error',summary:'No se pudo registrar',detail:mensaje,life:8000});}});} remove(u:UsuarioResponse){this.pendingDelete=u;this.deleteReason='';this.deleteVisible=true;} cancelDelete(){this.deleteVisible=false;this.pendingDelete=null;this.deleteReason='';} confirmDelete(){if(!this.pendingDelete)return;if(this.isAdministratorUser(this.pendingDelete)){this.cancelDelete();this.messages.add({severity:'error',summary:'Acción no permitida',detail:'El usuario Administrador no puede ser desactivado.',life:7000});return;}this.service.eliminar({id:this.pendingDelete.id,usuarioBaja:this.auth.getUsername(),descripcionBaja:this.deleteReason.trim()||'Baja desde frontend'}).subscribe({next:()=>{this.cancelDelete();this.messages.add({severity:'success',summary:'Usuario desactivado',detail:'El usuario fue desactivado correctamente.',life:5000});this.load();},error:e=>this.messages.add({severity:'error',summary:'No se pudo desactivar',detail:e?.error?.mensaje??'No se pudo desactivar el usuario.',life:7000})});}}
+import { UsuarioService } from '../../core/services/usuario.service'; 
+import { AuthService } from '../../core/services/auth.service'; 
+import { UsuarioResponse } from '../../core/models/api.models';
+
+@Component({
+    selector:'app-usuarios',
+    standalone:true,
+    imports:[
+        FormsModule,
+        ReactiveFormsModule,
+        TableModule,
+        TagModule,
+        ButtonModule,
+        DialogModule,
+        InputTextModule,
+        MessageModule,
+        TooltipModule],
+        template:`
+        <section class="page">
+            <div class="page-header"><div>
+                <div class="eyebrow">ADMINISTRACIÓN</div>
+                    <h1>Usuarios</h1><p class="muted">Administra los usuarios registrados.</p>
+                </div>
+                <p-button label="Nuevo usuario" icon="pi pi-plus" (onClick)="openNew()" />
+            </div>
+
+            @if(errorMessage){
+                <p-message severity="error" styleClass="w-full mb-3">{{errorMessage}}</p-message>}
+                <div class="card table-card">
+                    <div class="table-toolbar">
+                        <div class="search-box">
+                            <i class="pi pi-search"></i>
+                            <input pInputText [(ngModel)]="search" placeholder="Buscar usuario..." />
+                        </div>
+                    </div>
+
+                    <p-table [value]="filteredUsuarios" [loading]="loading" [paginator]="true" [rows]="10">
+                        <ng-template #header>
+                            <tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Correo</th><th>Estado</th><th>Acciones</th></tr>
+                        </ng-template>
+                        <ng-template #body let-u>
+                            <tr>
+                                <td>#{{u.id}}</td>
+                                <td><strong>{{u.nombreUsuario}}</strong></td>
+                                <td>{{u.nombreCompleto}}</td>
+                                <td>{{u.correoElectronico}}</td>
+                                <td>
+                                    <p-tag [value]="u.estadoRegistro===1?'Activo':'Inactivo'" 
+                                    [severity]="u.estadoRegistro===1?'success':'secondary'" />
+                                </td>
+                                <td>
+                                    <p-button icon="pi pi-eye" [text]="true" (onClick)="view(u)"/>
+                                    <p-button icon="pi pi-pencil" [text]="true" (onClick)="edit(u)"/>@if(!isAdministratorUser(u)){@if(u.estadoRegistro===1){<p-button icon="pi pi-user-minus" severity="danger" [text]="true" pTooltip="Desactivar" (onClick)="remove(u)"/>}@else{<p-button icon="pi pi-user-plus" severity="success" [text]="true" pTooltip="Activar" (onClick)="activate(u)"/>}}
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+
+                <p-dialog [(visible)]="detailVisible" header="Detalle del usuario" 
+                [modal]="true" [style]="{width:'520px'}">
+                    @if(selected){
+                        <div class="detail-grid">
+                            <div><span>ID</span><strong>#{{selected.id}}</strong></div>
+                            <div><span>Estado</span><strong>{{selected.estadoRegistro===1?'Activo':'Inactivo'}}</strong></div>
+                            <div class="full"><span>Usuario</span><strong>{{selected.nombreUsuario}}</strong></div>
+                            <div class="full"><span>Nombre completo</span><strong>{{selected.nombreCompleto}}</strong></div>
+                            <div class="full"><span>Correo</span><strong>{{selected.correoElectronico}}</strong></div>
+                        </div>
+                    }
+                </p-dialog>
+
+                <p-dialog [(visible)]="formVisible" [header]="editing?'Editar usuario':'Nuevo usuario'" 
+                [modal]="true" [style]="{width:'560px'}">
+                <form [formGroup]="form" (ngSubmit)="save()">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Usuario</label>
+                            <input pInputText formControlName="nombreUsuario" [readonly]="!!editing"/>
+                            @if(editing){
+                                <small class="muted">El nombre de usuario no se puede modificar una vez creado.</small>
+                            }
+                        </div>
+                        <div class="field">
+                            <label>Contraseña</label>
+                            <input pInputText type="password" formControlName="hashContrasena" [placeholder]="editing ? 'Dejar vacío para mantener la actual' : 'Ingresa una contraseña'"/>@if(editing){<small class="muted">Déjala vacía para conservar la contraseña actual.</small>}</div><div class="field full"><label>Nombre completo</label><input pInputText formControlName="nombreCompleto"/></div><div class="field full"><label>Correo</label><input pInputText type="email" formControlName="correoElectronico"/>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <p-button label="Cancelar" [text]="true" type="button" (onClick)="formVisible=false"/>
+                        <p-button label="Guardar" type="submit" [disabled]="form.invalid"/>
+                    </div>
+                </form>
+            </p-dialog>
+            
+            <p-dialog [(visible)]="deleteVisible" header="Confirmar baja de usuario" 
+            [modal]="true" [style]="{width:'min(480px, 95vw)'}">
+                <div class="field">
+                    <p>¿Deseas desactivar al usuario <strong>{{pendingDelete?.nombreUsuario}}</strong>?</p>
+                    <label>Motivo de baja</label>
+                    <input pInputText [(ngModel)]="deleteReason" placeholder="Motivo de baja" />
+                </div>
+                <div class="actions">
+                    <p-button label="Cancelar" [text]="true" (onClick)="cancelDelete()"/>
+                    <p-button label="Aceptar" severity="danger" (onClick)="confirmDelete()"/>
+                </div>
+            </p-dialog>
+            </section>`
+            })
+
+    export class UsuariosComponent implements OnInit { 
+        private service=inject(UsuarioService); 
+        private auth=inject(AuthService); 
+        private fb=inject(FormBuilder); 
+        private messages=inject(MessageService); 
+        usuarios:UsuarioResponse[]=[]; 
+        loading=false; 
+        errorMessage='';
+        search='';
+        detailVisible=false;
+        formVisible=false;
+        selected:UsuarioResponse|null=null;
+        editing:UsuarioResponse|null=null;
+        deleteVisible=false;
+        pendingDelete:UsuarioResponse|null=null;
+        deleteReason='';
+        
+        form=this.fb.nonNullable.group({
+            nombreUsuario:['',Validators.required],
+            hashContrasena:[''],
+            nombreCompleto:['',Validators.required],
+            correoElectronico:['',[Validators.required,Validators.email]]}
+        ); 
+        
+        get filteredUsuarios(){
+            const q=this.search.toLowerCase().trim();
+            return q?this.usuarios.filter(u=>`${u.nombreUsuario} ${u.nombreCompleto} ${u.correoElectronico}`.toLowerCase().includes(q)):this.usuarios;
+        } 
+        
+        ngOnInit(){
+            this.load();
+        }
+        
+        load(){
+            this.loading=true;
+            this.service.listar().subscribe({next:d=>{this.usuarios=d;this.loading=false},error:()=>{
+                this.errorMessage='No se pudieron cargar los usuarios.';
+                this.loading=false}})
+        }
+
+        isAdministratorUser(u:UsuarioResponse){
+            return u.nombreUsuario.trim().toLowerCase()==='administrador';
+        } 
+        
+        activate(u:UsuarioResponse){
+            this.service.activar(u.id,this.auth.getUsername()).subscribe({next:()=>{
+                this.messages.add({severity:'success',summary:'Usuario activado',detail:`${u.nombreUsuario} fue activado correctamente.`,life:5000});
+                this.load();
+            },error:e=>this.messages.add({severity:'error',summary:'No se pudo activar',detail:e?.error?.mensaje??'No se pudo activar el usuario.',life:7000})});
+        }
+        
+        view(u:UsuarioResponse){
+            this.service.obtener(u.id).subscribe({next:d=>{
+                this.selected=d;
+                this.detailVisible=true
+            },error:()=>this.errorMessage='No se pudo cargar el detalle.'});
+        } 
+        
+        openNew(){
+            this.editing=null;
+            this.form.reset({nombreUsuario:'',hashContrasena:'',nombreCompleto:'',correoElectronico:''});
+            this.form.controls.nombreUsuario.enable();
+            this.form.controls.hashContrasena.setValidators(Validators.required);
+            this.form.controls.hashContrasena.updateValueAndValidity();
+            this.formVisible=true;
+        }
+         
+        edit(u:UsuarioResponse){
+            this.editing=u;
+            this.form.reset({nombreUsuario:u.nombreUsuario,hashContrasena:'',nombreCompleto:u.nombreCompleto,correoElectronico:u.correoElectronico});
+            this.form.controls.nombreUsuario.disable();
+            this.form.controls.hashContrasena.clearValidators();
+            this.form.controls.hashContrasena.updateValueAndValidity();
+            this.formVisible=true;
+        } 
+        
+        save(){
+            if(this.form.invalid)
+                return;
+            
+            const v=this.form.getRawValue();
+            const req=this.editing?this.service.actualizar({
+                    id:this.editing.id,nombreCompleto:v.nombreCompleto,correoElectronico:v.correoElectronico,
+                    hashContrasena:v.hashContrasena?.trim()||undefined,usuarioModificacion:this.auth.getUsername()
+                })
+                :
+                this.service.registrar({
+                    nombreUsuario:v.nombreUsuario,hashContrasena:v.hashContrasena,nombreCompleto:v.nombreCompleto,
+                    correoElectronico:v.correoElectronico,usuarioCreacion:this.auth.getUsername()
+                });
+
+                req.subscribe({next:()=>{
+                    this.formVisible=false;
+                    this.messages.add({severity:'success',summary:'Usuario',
+                        detail:this.editing?'Usuario actualizado correctamente.':'Usuario registrado correctamente.',life:5000});
+                    this.load()
+                },error:e=>{
+                    const mensaje=e?.error?.mensaje??e?.error?.message??'No se pudo guardar el usuario.';
+                    this.messages.add({severity:'error',summary:'No se pudo registrar',detail:mensaje,life:8000});
+                }});
+        } 
+                
+        remove(u:UsuarioResponse){
+            this.pendingDelete=u;
+            this.deleteReason='';
+            this.deleteVisible=true;
+        } 
+                
+        cancelDelete(){
+            this.deleteVisible=false;
+            this.pendingDelete=null;
+            this.deleteReason='';
+        } 
+        
+        confirmDelete(){
+            if(!this.pendingDelete)
+                return;
+            if(this.isAdministratorUser(this.pendingDelete)){
+                this.cancelDelete();
+                this.messages.add({severity:'error',summary:'Acción no permitida',
+                    detail:'El usuario Administrador no puede ser desactivado.',life:7000});
+                    return;
+                }
+                this.service.eliminar({id:this.pendingDelete.id,usuarioBaja:this.auth.getUsername(),
+                    descripcionBaja:this.deleteReason.trim()||'Baja desde frontend'}).subscribe({
+                        next:()=>{this.cancelDelete();
+                            this.messages.add({severity:'success',summary:'Usuario desactivado',
+                                detail:'El usuario fue desactivado correctamente.',life:5000});
+                            this.load();
+                        },error:e=>this.messages.add({severity:'error',summary:'No se pudo desactivar',
+                            detail:e?.error?.mensaje??'No se pudo desactivar el usuario.',life:7000})
+                        });
+        }
+    }

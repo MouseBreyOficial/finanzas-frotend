@@ -65,7 +65,7 @@ import { CuentaResponse, IngresoResponse } from '../../core/models/api.models';
             </div>
             <div class="field">
               <label>Descripción</label>
-              <input pInputText formControlName="descripcion" />
+              <input pInputText formControlName="descripcion" placeholder="Ingrese una descripcion"/>
             </div>
           </div>
           <div class="actions">
