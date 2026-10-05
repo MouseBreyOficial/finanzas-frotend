@@ -9,15 +9,15 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^20.3.0",
-    "@angular/common": "^20.3.0",
-    "@angular/compiler": "^20.3.0",
-    "@angular/core": "^20.3.0",
-    "@angular/forms": "^20.3.0",
-    "@angular/platform-browser": "^20.3.0",
-    "@angular/platform-browser-dynamic": "^20.3.0",
-    "@angular/router": "^20.3.0",
-    "@angular/service-worker": "20.3.32",
+    "@angular/animations": "^20.3.33",
+    "@angular/common": "^20.3.33",
+    "@angular/compiler": "^20.3.33",
+    "@angular/core": "^20.3.33",
+    "@angular/forms": "^20.3.33",
+    "@angular/platform-browser": "^20.3.33",
+    "@angular/platform-browser-dynamic": "^20.3.33",
+    "@angular/router": "^20.3.33",
+    "@angular/service-worker": "20.3.33",
     "@primeng/themes": "^20.2.0",
     "chart.js": "^4.5.0",
     "primeicons": "^7.0.0",
@@ -29,7 +29,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^20.3.0",
     "@angular/cli": "^20.3.0",
-    "@angular/compiler-cli": "^20.3.0",
+    "@angular/compiler-cli": "^20.3.33",
     "typescript": "~5.9.2"
   }
 }
