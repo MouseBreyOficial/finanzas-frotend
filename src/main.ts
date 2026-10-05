@@ -16,6 +16,8 @@ import { MessageService } from 'primeng/api';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { authInterceptor } from './app/core/interceptors/auth.interceptor';
+import { isDevMode } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
 
 
 type AppThemeName = 'Aura' | 'Lara' | 'Material' | 'Nora';
@@ -217,7 +219,10 @@ bootstrapApplication(AppComponent, {
           darkModeSelector: '.app-dark'
         }
       }
-    })
+    }), provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          })
 
   ]
 
