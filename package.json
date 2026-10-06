@@ -5,7 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development"
+    "watch": "ng build --watch --configuration development",
+    "pwa": "ng build --configuration pwa-local && http-server dist/finanzas-frontend/browser -p 4200 -c-1"
   },
   "private": true,
   "dependencies": {
@@ -30,6 +31,7 @@
     "@angular-devkit/build-angular": "^20.3.0",
     "@angular/cli": "^20.3.0",
     "@angular/compiler-cli": "^20.3.33",
+    "http-server": "^14.1.1",
     "typescript": "~5.9.2"
   }
 }

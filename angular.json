@@ -57,6 +57,20 @@
               "outputHashing": "all",
               "serviceWorker": "ngsw-config.json"
             },
+            "pwa-local": {
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": false,
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "3mb"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -73,6 +87,9 @@
             },
             "development": {
               "buildTarget": "finanzas-frontend:build:development"
+            },
+            "pwa-local": {
+              "buildTarget": "finanzas-frontend:build:pwa-local"
             }
           },
           "defaultConfiguration": "development"

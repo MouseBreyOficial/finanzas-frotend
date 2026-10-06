@@ -99,7 +99,6 @@ import { PwaUpdateService } from "../../core/services/pwa-update.service";
     </div>
   `,
 })
-
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
@@ -147,15 +146,29 @@ export class LoginComponent {
   }
 
   private async procesarLoginExitoso(): Promise<void> {
-    const actualizacionDisponible =
-      await this.pwaUpdateService.hayActualizacion();
+    const actualizacionDisponible = await this.pwaUpdateService.hayActualizacion();
 
     if (actualizacionDisponible) {
+      /*
+       * Primero navegamos al dashboard.
+       * De esta manera, cuando la nueva versión
+       * recargue la aplicación, la URL actual
+       * ya será /dashboard.
+       */
+      await this.router.navigate(["/dashboard"]);
+
+      /*
+       * Activamos la nueva versión y recargamos.
+       */
       await this.pwaUpdateService.actualizarAplicacion();
 
       return;
     }
 
+    /*
+     * Si no existe actualización,
+     * continuamos normalmente.
+     */
     await this.router.navigate(["/dashboard"]);
   }
 }
