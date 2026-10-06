@@ -188,6 +188,7 @@ import { UsuarioResponse } from "../../core/models/api.models";
            ===================================================== -->
 
       @if (usuario) {
+        <br/>
         <div class="notification-card card">
           <div class="notification-content">
             <div class="notification-icon">
@@ -217,7 +218,7 @@ import { UsuarioResponse } from "../../core/models/api.models";
                 <div class="notification-status">
                   <i class="pi pi-spin pi-spinner"></i>
 
-                  <span> Consultando estado... </span>
+                  <span> Consultando estado de este dispositivo... </span>
                 </div>
               } @else {
                 <div class="notification-status" [class.active]="pushActivo">
@@ -228,7 +229,8 @@ import { UsuarioResponse } from "../../core/models/api.models";
                   ></i>
 
                   <span>
-                    Estado:
+                    Estado en este dispositivo:
+
                     <strong>
                       {{ pushActivo ? "Activadas" : "Desactivadas" }}
                     </strong>
@@ -350,23 +352,31 @@ import { UsuarioResponse } from "../../core/models/api.models";
 })
 export class PerfilComponent implements OnInit {
   readonly auth = inject(AuthService);
+
   readonly themeService = inject(ThemeService);
+
   readonly pushService = inject(PushNotificationService);
 
   private service = inject(UsuarioService);
+
   private router = inject(Router);
+
   private messages = inject(MessageService);
 
   usuario: UsuarioResponse | null = null;
 
   loading = true;
+
   errorMessage = "";
 
   deleteAccountVisible = false;
+
   deleteReason = "";
 
   loadingPush = false;
+
   processingPush = false;
+
   sendingTest = false;
 
   pushActivo = false;
@@ -399,6 +409,7 @@ export class PerfilComponent implements OnInit {
       this.service.obtener(id).subscribe({
         next: (usuario) => {
           this.usuario = usuario;
+
           this.loading = false;
 
           this.cargarEstadoPush();
@@ -414,29 +425,33 @@ export class PerfilComponent implements OnInit {
   }
 
   /**
-   * Consulta el estado de las notificaciones
-   * para el usuario actual.
+   * Consulta si ESTE navegador/dispositivo
+   * tiene actualmente una suscripción Push.
+   *
+   * Ya no utilizamos el estado general del
+   * usuario almacenado en el backend.
    */
   cargarEstadoPush(): void {
-    if (!this.usuario) {
-      return;
-    }
-
     if (!this.pushService.soportado) {
       this.pushActivo = false;
+
+      this.loadingPush = false;
+
       return;
     }
 
     this.loadingPush = true;
 
-    this.pushService.estado(this.usuario.id).subscribe({
+    this.pushService.estadoDispositivoActual().subscribe({
       next: (activo) => {
         this.pushActivo = activo;
+
         this.loadingPush = false;
       },
 
       error: () => {
         this.pushActivo = false;
+
         this.loadingPush = false;
       },
     });
@@ -457,7 +472,12 @@ export class PerfilComponent implements OnInit {
     this.pushService.activar(this.usuario.id).subscribe({
       next: () => {
         this.processingPush = false;
-        this.pushActivo = true;
+
+        /*
+         * Volvemos a consultar al navegador.
+         * No asumimos simplemente que está activo.
+         */
+        this.cargarEstadoPush();
 
         this.messages.add({
           severity: "success",
@@ -469,6 +489,8 @@ export class PerfilComponent implements OnInit {
 
       error: (error) => {
         this.processingPush = false;
+
+        this.cargarEstadoPush();
 
         this.messages.add({
           severity: "error",
@@ -484,8 +506,8 @@ export class PerfilComponent implements OnInit {
   }
 
   /**
-   * Desactiva la suscripción Push
-   * de este dispositivo.
+   * Desactiva únicamente la suscripción Push
+   * correspondiente a ESTE dispositivo.
    */
   desactivarNotificaciones(): void {
     if (!this.usuario) {
@@ -497,7 +519,12 @@ export class PerfilComponent implements OnInit {
     this.pushService.desactivar(this.usuario.id).subscribe({
       next: () => {
         this.processingPush = false;
-        this.pushActivo = false;
+
+        /*
+         * Verificamos que realmente ya no exista
+         * una suscripción local.
+         */
+        this.cargarEstadoPush();
 
         this.messages.add({
           severity: "success",
@@ -509,6 +536,8 @@ export class PerfilComponent implements OnInit {
 
       error: (error) => {
         this.processingPush = false;
+
+        this.cargarEstadoPush();
 
         this.messages.add({
           severity: "error",

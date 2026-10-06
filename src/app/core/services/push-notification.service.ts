@@ -2,42 +2,58 @@ import { Injectable, inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { SwPush } from "@angular/service-worker";
 import { Observable, from, map, switchMap, take, throwError } from "rxjs";
+
 import { API_CONFIG } from "../config/api.config";
 import { ApiResponse, PushEstadoResponse, PushSuscripcionRequest} from "../models/api.models";
 
-@Injectable({ providedIn: "root" })
+@Injectable({
+  providedIn: "root",
+})
 export class PushNotificationService {
   private readonly http = inject(HttpClient);
   private readonly swPush = inject(SwPush);
   private readonly url = `${API_CONFIG.baseUrl}/push`;
 
-  /**
-   * Indica si Service Worker / Web Push está disponible.
-   */
   get soportado(): boolean {
     return this.swPush.isEnabled;
   }
 
   /**
-   * Devuelve la suscripción actual como Observable.
+   * Suscripción Push del navegador/dispositivo actual.
    */
   get suscripcionActual(): Observable<PushSubscription | null> {
     return this.swPush.subscription;
   }
 
   /**
-   * Consulta si el usuario tiene alguna suscripción
-   * activa registrada en el backend.
+   * Indica si ESTE navegador/dispositivo tiene
+   * una suscripción Push activa.
    */
-  estado(idUsuario: number): Observable<boolean> {
+  estadoDispositivoActual(): Observable<boolean> {
+    if (!this.swPush.isEnabled) {
+      return from(Promise.resolve(false));
+    }
+
+    return this.swPush.subscription.pipe(
+      take(1),
+      map((subscription) => subscription !== null),
+    );
+  }
+
+  /**
+   * Indica si el usuario tiene al menos una
+   * suscripción registrada en el backend.
+   *
+   * Se mantiene para futuros usos, pero NO debe
+   * utilizarse para mostrar el estado del
+   * dispositivo actual.
+   */
+  estadoUsuario(idUsuario: number): Observable<boolean> {
     return this.http
       .get<ApiResponse<PushEstadoResponse>>(`${this.url}/estado/${idUsuario}`)
       .pipe(map((response) => response.data?.activo ?? false));
   }
 
-  /**
-   * Activa Web Push para este navegador/dispositivo.
-   */
   activar(idUsuario: number): Observable<void> {
     if (!this.swPush.isEnabled) {
       return throwError(
@@ -53,17 +69,16 @@ export class PushNotificationService {
 
       switchMap((subscription) => {
         /*
-         * Si ya existe una suscripción en este navegador,
-         * simplemente volvemos a registrarla en el backend.
+         * Si este navegador ya tiene una suscripción,
+         * la volvemos a registrar en el backend.
+         *
+         * Esto también permite recuperar el registro
+         * si por algún motivo estaba inactivo en BD.
          */
         if (subscription) {
           return this.registrarEnBackend(idUsuario, subscription);
         }
 
-        /*
-         * Si todavía no existe, solicitamos una nueva
-         * utilizando nuestra clave pública VAPID.
-         */
         return from(
           this.swPush.requestSubscription({
             serverPublicKey: API_CONFIG.vapidPublicKey,
@@ -77,10 +92,6 @@ export class PushNotificationService {
     );
   }
 
-  /**
-   * Desactiva Web Push únicamente para
-   * este navegador/dispositivo.
-   */
   desactivar(idUsuario: number): Observable<void> {
     if (!this.swPush.isEnabled) {
       return throwError(
@@ -95,46 +106,26 @@ export class PushNotificationService {
       take(1),
 
       switchMap((subscription) => {
-        /*
-         * Este navegador ya no tiene una
-         * PushSubscription.
-         */
         if (!subscription) {
           return from(Promise.resolve());
         }
 
         const endpoint = subscription.endpoint;
 
-        /*
-         * Primero desactivamos la suscripción
-         * en nuestro backend.
-         */
         return this.desactivarEnBackend(idUsuario, endpoint).pipe(
-          /*
-           * Después eliminamos la suscripción
-           * del navegador.
-           */
           switchMap(() => from(subscription.unsubscribe())),
-
           map(() => void 0),
         );
       }),
     );
   }
 
-  /**
-   * Envía una notificación Web Push de prueba.
-   */
   enviarPrueba(idUsuario: number): Observable<void> {
     return this.http
       .post<ApiResponse<void>>(`${this.url}/prueba/${idUsuario}`, {})
       .pipe(map(() => void 0));
   }
 
-  /**
-   * Registra en Spring Boot la PushSubscription
-   * obtenida del navegador.
-   */
   private registrarEnBackend(
     idUsuario: number,
     subscription: PushSubscription,
@@ -164,10 +155,6 @@ export class PushNotificationService {
       .pipe(map(() => void 0));
   }
 
-  /**
-   * Desactiva en Spring Boot la suscripción
-   * correspondiente al endpoint del navegador.
-   */
   private desactivarEnBackend(
     idUsuario: number,
     endpoint: string,
