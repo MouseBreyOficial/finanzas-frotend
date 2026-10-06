@@ -156,3 +156,19 @@ export interface UsuarioRequest { nombreUsuario: string; hashContrasena: string;
 export interface UsuarioUpdateRequest { id: number; nombreCompleto: string; correoElectronico: string; hashContrasena?: string; usuarioModificacion: string; }
 export interface UsuarioDeleteRequest { id: number; usuarioBaja: string; descripcionBaja: string; }
 export interface GastoResumen { total: number; cantidad: number; porDia: Record<string, number>; porCategoria: Record<string, number>; detalles: GastoResponse[]; }
+
+
+export interface PushSuscripcionRequest {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}
+
+export interface PushSuscripcionEliminarRequest {
+  endpoint: string;
+}
+
+export interface PushEstadoResponse {
+  activo: boolean;
+}
+
