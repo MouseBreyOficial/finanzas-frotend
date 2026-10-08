@@ -191,3 +191,26 @@ export interface PushSuscripcionEliminarRequest {
 export interface PushEstadoResponse {
   activo: boolean;
 }
+
+
+export interface TransferenciaResponse {
+  id: number;
+  idUsuario: number;
+  idCuentaOrigen: number;
+  nombreCuentaOrigen: string;
+  idCuentaDestino: number;
+  nombreCuentaDestino: string;
+  monto: number;
+  fechaTransferencia: string;
+  descripcion?: string;
+}
+
+export interface TransferenciaRequest {
+  idUsuario: number;
+  idCuentaOrigen: number;
+  idCuentaDestino: number;
+  monto: number;
+  fechaTransferencia: string;
+  descripcion?: string;
+  usuarioCreacion: string;
+}

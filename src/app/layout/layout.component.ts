@@ -52,6 +52,9 @@ import {
           <a class="nav-item" routerLink="/gastos" routerLinkActive="active"
             ><i class="pi pi-arrow-down-right"></i><span>Gastos</span></a
           >
+          <a class="nav-item" routerLink="/transferencias" routerLinkActive="active"
+            ><i class="pi pi-arrow-right-arrow-left"></i><span>Transferencias</span></a
+          >
           <a class="nav-item" routerLink="/analisis" routerLinkActive="active"
             ><i class="pi pi-chart-bar"></i><span>Análisis</span></a
           >
@@ -69,7 +72,7 @@ import {
           >
         </nav>
         <div class="sidebar-footer">
-          <i class="pi pi-shield"></i><span>Version 1.1</span>
+          <i class="pi pi-shield"></i><span>Version 1.2</span>
         </div>
       </aside>
       <main class="main-content">

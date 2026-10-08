@@ -51,6 +51,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "transferencias",
+        loadComponent: () =>
+          import("./pages/transferencias/transferencias.component").then(
+            (m) => m.TransferenciasComponent,
+          ),
+      },
+      {
         path: "alertas",
         loadComponent: () =>
           import("./pages/alertas/alertas.component").then(
