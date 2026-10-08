@@ -188,7 +188,7 @@ import { UsuarioResponse } from "../../core/models/api.models";
            ===================================================== -->
 
       @if (usuario) {
-        <br/>
+        <br />
         <div class="notification-card card">
           <div class="notification-content">
             <div class="notification-icon">

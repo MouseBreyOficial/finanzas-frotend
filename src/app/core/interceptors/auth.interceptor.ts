@@ -1,8 +1,8 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
-import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { HttpErrorResponse, HttpInterceptorFn } from "@angular/common/http";
+import { inject } from "@angular/core";
+import { catchError, throwError } from "rxjs";
+import { Router } from "@angular/router";
+import { AuthService } from "../services/auth.service";
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
@@ -17,13 +17,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 || error.status === 403) {
         auth.logout();
-        if (!router.url.startsWith('/login') && !router.url.startsWith('/registro')) {
-          void router.navigate(['/login'], {
-            queryParams: { expired: '1' }
+        if (
+          !router.url.startsWith("/login") &&
+          !router.url.startsWith("/registro")
+        ) {
+          void router.navigate(["/login"], {
+            queryParams: { expired: "1" },
           });
         }
       }
       return throwError(() => error);
-    })
+    }),
   );
 };

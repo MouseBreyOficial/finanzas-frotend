@@ -1,39 +1,40 @@
-import { bootstrapApplication } from '@angular/platform-browser';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { bootstrapApplication } from "@angular/platform-browser";
+import { provideAnimationsAsync } from "@angular/platform-browser/animations/async";
+import { provideHttpClient, withInterceptors } from "@angular/common/http";
+import { provideRouter } from "@angular/router";
 
-import { providePrimeNG } from 'primeng/config';
-import { definePreset } from '@primeng/themes';
+import { providePrimeNG } from "primeng/config";
+import { definePreset } from "@primeng/themes";
 
-import Aura from '@primeng/themes/aura';
-import Lara from '@primeng/themes/lara';
-import Material from '@primeng/themes/material';
-import Nora from '@primeng/themes/nora';
+import Aura from "@primeng/themes/aura";
+import Lara from "@primeng/themes/lara";
+import Material from "@primeng/themes/material";
+import Nora from "@primeng/themes/nora";
 
-import { MessageService } from 'primeng/api';
+import { MessageService } from "primeng/api";
 
-import { AppComponent } from './app/app.component';
-import { routes } from './app/app.routes';
-import { authInterceptor } from './app/core/interceptors/auth.interceptor';
-import { isDevMode } from '@angular/core';
-import { provideServiceWorker } from '@angular/service-worker';
+import { AppComponent } from "./app/app.component";
+import { routes } from "./app/app.routes";
+import { authInterceptor } from "./app/core/interceptors/auth.interceptor";
+import { provideServiceWorker } from "@angular/service-worker";
 
+import { DEFAULT_CURRENCY_CODE, LOCALE_ID, isDevMode } from "@angular/core";
+import { registerLocaleData } from "@angular/common";
+import localeEsPe from "@angular/common/locales/es-PE";
 
-type AppThemeName = 'Aura' | 'Lara' | 'Material' | 'Nora';
+type AppThemeName = "Aura" | "Lara" | "Material" | "Nora";
 
 type AppPrimaryColor =
-  | 'blue'
-  | 'green'
-  | 'emerald'
-  | 'violet'
-  | 'orange'
-  | 'red'
-  | 'indigo'
-  | 'noir';
+  | "blue"
+  | "green"
+  | "emerald"
+  | "violet"
+  | "orange"
+  | "red"
+  | "indigo"
+  | "noir";
 
 type PrimePreset = Record<string, unknown>;
-
 
 /*
  * ============================================================
@@ -45,9 +46,8 @@ const presets: Record<AppThemeName, PrimePreset> = {
   Aura: Aura as PrimePreset,
   Lara: Lara as PrimePreset,
   Material: Material as PrimePreset,
-  Nora: Nora as PrimePreset
+  Nora: Nora as PrimePreset,
 };
-
 
 /*
  * ============================================================
@@ -56,22 +56,19 @@ const presets: Record<AppThemeName, PrimePreset> = {
  */
 
 function getSavedTheme(): AppThemeName {
-
-  const saved =
-    localStorage.getItem('finanzas_theme') as AppThemeName | null;
+  const saved = localStorage.getItem("finanzas_theme") as AppThemeName | null;
 
   if (
-    saved === 'Aura' ||
-    saved === 'Lara' ||
-    saved === 'Material' ||
-    saved === 'Nora'
+    saved === "Aura" ||
+    saved === "Lara" ||
+    saved === "Material" ||
+    saved === "Nora"
   ) {
     return saved;
   }
 
-  return 'Aura';
+  return "Aura";
 }
-
 
 /*
  * ============================================================
@@ -80,30 +77,27 @@ function getSavedTheme(): AppThemeName {
  */
 
 function getSavedPrimaryColor(): AppPrimaryColor {
-
-  const saved =
-    localStorage.getItem(
-      'finanzas_primary_color'
-    ) as AppPrimaryColor | null;
+  const saved = localStorage.getItem(
+    "finanzas_primary_color",
+  ) as AppPrimaryColor | null;
 
   const validColors: AppPrimaryColor[] = [
-    'blue',
-    'green',
-    'emerald',
-    'violet',
-    'orange',
-    'red',
-    'indigo',
-    'noir'
+    "blue",
+    "green",
+    "emerald",
+    "violet",
+    "orange",
+    "red",
+    "indigo",
+    "noir",
   ];
 
   if (saved && validColors.includes(saved)) {
     return saved;
   }
 
-  return 'blue';
+  return "blue";
 }
-
 
 /*
  * ============================================================
@@ -111,24 +105,20 @@ function getSavedPrimaryColor(): AppPrimaryColor {
  * ============================================================
  */
 
-function primaryPalette(
-  color: AppPrimaryColor
-): Record<string, string> {
-
-  if (color === 'noir') {
-
+function primaryPalette(color: AppPrimaryColor): Record<string, string> {
+  if (color === "noir") {
     return {
-      50: '{zinc.50}',
-      100: '{zinc.100}',
-      200: '{zinc.200}',
-      300: '{zinc.300}',
-      400: '{zinc.400}',
-      500: '{zinc.500}',
-      600: '{zinc.600}',
-      700: '{zinc.700}',
-      800: '{zinc.800}',
-      900: '{zinc.900}',
-      950: '{zinc.950}'
+      50: "{zinc.50}",
+      100: "{zinc.100}",
+      200: "{zinc.200}",
+      300: "{zinc.300}",
+      400: "{zinc.400}",
+      500: "{zinc.500}",
+      600: "{zinc.600}",
+      700: "{zinc.700}",
+      800: "{zinc.800}",
+      900: "{zinc.900}",
+      950: "{zinc.950}",
     };
   }
 
@@ -143,10 +133,9 @@ function primaryPalette(
     700: `{${color}.700}`,
     800: `{${color}.800}`,
     900: `{${color}.900}`,
-    950: `{${color}.950}`
+    950: `{${color}.950}`,
   };
 }
-
 
 /*
  * ============================================================
@@ -157,15 +146,11 @@ function primaryPalette(
 const savedTheme = getSavedTheme();
 const savedPrimaryColor = getSavedPrimaryColor();
 
-const initialPreset = definePreset(
-  presets[savedTheme],
-  {
-    semantic: {
-      primary: primaryPalette(savedPrimaryColor)
-    }
-  }
-);
-
+const initialPreset = definePreset(presets[savedTheme], {
+  semantic: {
+    primary: primaryPalette(savedPrimaryColor),
+  },
+});
 
 /*
  * ============================================================
@@ -173,14 +158,12 @@ const initialPreset = definePreset(
  * ============================================================
  */
 
-const savedMode =
-  localStorage.getItem('finanzas_color_mode');
+const savedMode = localStorage.getItem("finanzas_color_mode");
 
-document.documentElement.classList.toggle(
-  'app-dark',
-  savedMode === 'dark'
-);
+document.documentElement.classList.toggle("app-dark", savedMode === "dark");
 
+//formato de moneda
+registerLocaleData(localeEsPe);
 
 /*
  * ============================================================
@@ -189,18 +172,12 @@ document.documentElement.classList.toggle(
  */
 
 bootstrapApplication(AppComponent, {
-
   providers: [
-
     MessageService,
 
     provideAnimationsAsync(),
 
-    provideHttpClient(
-      withInterceptors([
-        authInterceptor
-      ])
-    ),
+    provideHttpClient(withInterceptors([authInterceptor])),
 
     provideRouter(routes),
 
@@ -208,7 +185,6 @@ bootstrapApplication(AppComponent, {
       ripple: true,
 
       theme: {
-
         /*
          * PrimeNG ahora arranca directamente con
          * el tema + color guardados.
@@ -216,16 +192,21 @@ bootstrapApplication(AppComponent, {
         preset: initialPreset,
 
         options: {
-          darkModeSelector: '.app-dark'
-        }
-      }
-    }), provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          })
-
-  ]
-
-}).catch(
-  err => console.error(err)
-);
+          darkModeSelector: ".app-dark",
+        },
+      },
+    }),
+    provideServiceWorker("ngsw-worker.js", {
+      enabled: !isDevMode(),
+      registrationStrategy: "registerWhenStable:30000",
+    }),
+    {
+      provide: LOCALE_ID,
+      useValue: "es-PE",
+    },
+    {
+      provide: DEFAULT_CURRENCY_CODE,
+      useValue: "PEN",
+    },
+  ],
+}).catch((err) => console.error(err));

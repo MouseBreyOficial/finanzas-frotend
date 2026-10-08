@@ -4,7 +4,11 @@ import { SwPush } from "@angular/service-worker";
 import { Observable, from, map, switchMap, take, throwError } from "rxjs";
 
 import { API_CONFIG } from "../config/api.config";
-import { ApiResponse, PushEstadoResponse, PushSuscripcionRequest} from "../models/api.models";
+import {
+  ApiResponse,
+  PushEstadoResponse,
+  PushSuscripcionRequest,
+} from "../models/api.models";
 
 @Injectable({
   providedIn: "root",

@@ -1,72 +1,66 @@
-import { Injectable } from '@angular/core';
-import { definePreset, usePreset } from '@primeng/themes';
+import { Injectable } from "@angular/core";
+import { definePreset, usePreset } from "@primeng/themes";
 
-import Aura from '@primeng/themes/aura';
-import Lara from '@primeng/themes/lara';
-import Material from '@primeng/themes/material';
-import Nora from '@primeng/themes/nora';
+import Aura from "@primeng/themes/aura";
+import Lara from "@primeng/themes/lara";
+import Material from "@primeng/themes/material";
+import Nora from "@primeng/themes/nora";
 
-export type AppThemeName = 'Aura' | 'Lara' | 'Material' | 'Nora';
-export type AppColorMode = 'light' | 'dark';
+export type AppThemeName = "Aura" | "Lara" | "Material" | "Nora";
+export type AppColorMode = "light" | "dark";
 
 export type AppPrimaryColor =
-  | 'blue'
-  | 'green'
-  | 'emerald'
-  | 'violet'
-  | 'orange'
-  | 'red'
-  | 'indigo'
-  | 'noir';
+  | "blue"
+  | "green"
+  | "emerald"
+  | "violet"
+  | "orange"
+  | "red"
+  | "indigo"
+  | "noir";
 
 type PrimePreset = Record<string, unknown>;
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class ThemeService {
-
-  private readonly themeKey = 'finanzas_theme';
-  private readonly modeKey = 'finanzas_color_mode';
-  private readonly primaryKey = 'finanzas_primary_color';
+  private readonly themeKey = "finanzas_theme";
+  private readonly modeKey = "finanzas_color_mode";
+  private readonly primaryKey = "finanzas_primary_color";
 
   private readonly presets: Record<AppThemeName, PrimePreset> = {
     Aura: Aura as PrimePreset,
     Lara: Lara as PrimePreset,
     Material: Material as PrimePreset,
-    Nora: Nora as PrimePreset
+    Nora: Nora as PrimePreset,
   };
 
-  readonly themes: AppThemeName[] = [
-    'Aura',
-    'Lara',
-    'Material',
-    'Nora'
-  ];
+  readonly themes: AppThemeName[] = ["Aura", "Lara", "Material", "Nora"];
 
   readonly modes = [
     {
-      label: 'Claro',
-      value: 'light' as AppColorMode
+      label: "Claro",
+      value: "light" as AppColorMode,
     },
     {
-      label: 'Oscuro',
-      value: 'dark' as AppColorMode
-    }
+      label: "Oscuro",
+      value: "dark" as AppColorMode,
+    },
   ];
 
   readonly primaryColors: {
     label: string;
     value: AppPrimaryColor;
   }[] = [
-    { label: 'Azul', value: 'blue' },
-    { label: 'Verde', value: 'green' },
-    { label: 'Esmeralda', value: 'emerald' },
-    { label: 'Violeta', value: 'violet' },
-    { label: 'Naranja', value: 'orange' },
-    { label: 'Rojo', value: 'red' },
-    { label: 'Índigo', value: 'indigo' },
-    { label: 'Noir', value: 'noir' }
+    { label: "Azul", value: "blue" },
+    { label: "Verde", value: "green" },
+    { label: "Esmeralda", value: "emerald" },
+    { label: "Violeta", value: "violet" },
+    { label: "Naranja", value: "orange" },
+    { label: "Rojo", value: "red" },
+    { label: "Índigo", value: "indigo" },
+    { label: "Noir", value: "noir" },
   ];
 
   constructor() {
@@ -74,38 +68,32 @@ export class ThemeService {
   }
 
   get theme(): AppThemeName {
-    const value =
-      localStorage.getItem(this.themeKey) as AppThemeName | null;
+    const value = localStorage.getItem(this.themeKey) as AppThemeName | null;
 
     if (value && this.presets[value]) {
       return value;
     }
 
-    return 'Aura';
+    return "Aura";
   }
 
   get mode(): AppColorMode {
-    return localStorage.getItem(this.modeKey) === 'dark'
-      ? 'dark'
-      : 'light';
+    return localStorage.getItem(this.modeKey) === "dark" ? "dark" : "light";
   }
 
   get primaryColor(): AppPrimaryColor {
-    const value =
-      localStorage.getItem(this.primaryKey) as AppPrimaryColor | null;
+    const value = localStorage.getItem(
+      this.primaryKey,
+    ) as AppPrimaryColor | null;
 
-    if (
-      value &&
-      this.primaryColors.some(color => color.value === value)
-    ) {
+    if (value && this.primaryColors.some((color) => color.value === value)) {
       return value;
     }
 
-    return 'blue';
+    return "blue";
   }
 
   setTheme(theme: AppThemeName): void {
-
     if (!this.presets[theme]) {
       return;
     }
@@ -116,10 +104,7 @@ export class ThemeService {
   }
 
   setPrimaryColor(color: AppPrimaryColor): void {
-
-    if (
-      !this.primaryColors.some(item => item.value === color)
-    ) {
+    if (!this.primaryColors.some((item) => item.value === color)) {
       return;
     }
 
@@ -129,14 +114,12 @@ export class ThemeService {
   }
 
   setMode(mode: AppColorMode): void {
-
     localStorage.setItem(this.modeKey, mode);
 
     this.applyMode(mode);
   }
 
   restore(): void {
-
     /*
      * Primero restauramos el modo.
      * Después reconstruimos completamente el preset
@@ -148,50 +131,38 @@ export class ThemeService {
   }
 
   private applyCurrentConfiguration(): void {
-
     const theme = this.theme;
     const color = this.primaryColor;
 
     const basePreset = this.presets[theme];
 
-    const customPreset = definePreset(
-      basePreset,
-      {
-        semantic: {
-          primary: this.primaryPalette(color)
-        }
-      }
-    ) as PrimePreset;
+    const customPreset = definePreset(basePreset, {
+      semantic: {
+        primary: this.primaryPalette(color),
+      },
+    }) as PrimePreset;
 
     usePreset(customPreset);
   }
 
   private applyMode(mode: AppColorMode): void {
-
-    document.documentElement.classList.toggle(
-      'app-dark',
-      mode === 'dark'
-    );
+    document.documentElement.classList.toggle("app-dark", mode === "dark");
   }
 
-  private primaryPalette(
-    color: AppPrimaryColor
-  ): Record<string, string> {
-
-    if (color === 'noir') {
-
+  private primaryPalette(color: AppPrimaryColor): Record<string, string> {
+    if (color === "noir") {
       return {
-        50: '{zinc.50}',
-        100: '{zinc.100}',
-        200: '{zinc.200}',
-        300: '{zinc.300}',
-        400: '{zinc.400}',
-        500: '{zinc.500}',
-        600: '{zinc.600}',
-        700: '{zinc.700}',
-        800: '{zinc.800}',
-        900: '{zinc.900}',
-        950: '{zinc.950}'
+        50: "{zinc.50}",
+        100: "{zinc.100}",
+        200: "{zinc.200}",
+        300: "{zinc.300}",
+        400: "{zinc.400}",
+        500: "{zinc.500}",
+        600: "{zinc.600}",
+        700: "{zinc.700}",
+        800: "{zinc.800}",
+        900: "{zinc.900}",
+        950: "{zinc.950}",
       };
     }
 
@@ -206,7 +177,7 @@ export class ThemeService {
       700: `{${color}.700}`,
       800: `{${color}.800}`,
       900: `{${color}.900}`,
-      950: `{${color}.950}`
+      950: `{${color}.950}`,
     };
   }
 }

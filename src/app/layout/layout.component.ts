@@ -30,7 +30,7 @@ import {
     SelectModule,
     ToastModule,
   ],
-  template: ` <p-toast position="top-right"></p-toast>
+  template: ` <p-toast position="bottom-right"></p-toast>
     <div class="nav-shell">
       <aside class="sidebar">
         <div class="brand">
@@ -69,7 +69,7 @@ import {
           >
         </nav>
         <div class="sidebar-footer">
-          <i class="pi pi-shield"></i><span>Version 1.0</span>
+          <i class="pi pi-shield"></i><span>Version 1.1</span>
         </div>
       </aside>
       <main class="main-content">

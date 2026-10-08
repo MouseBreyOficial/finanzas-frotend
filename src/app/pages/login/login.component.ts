@@ -11,6 +11,9 @@ import { MessageModule } from "primeng/message";
 import { AuthService } from "../../core/services/auth.service";
 import { PwaUpdateService } from "../../core/services/pwa-update.service";
 
+import { MessageService } from "primeng/api";
+import { Toast } from "primeng/toast";
+
 @Component({
   selector: "app-login",
   standalone: true,
@@ -21,8 +24,10 @@ import { PwaUpdateService } from "../../core/services/pwa-update.service";
     PasswordModule,
     ButtonModule,
     MessageModule,
-  ],
+    Toast
+],
   template: `
+    <p-toast position="bottom-right"></p-toast>
     <div class="auth-page">
       <div class="auth-card">
         <h1 class="auth-title text-center">Finanzas Personales</h1>
@@ -106,6 +111,7 @@ export class LoginComponent {
   private readonly route = inject(ActivatedRoute);
 
   private readonly pwaUpdateService = inject(PwaUpdateService);
+  private readonly messages = inject(MessageService);
 
   loading = false;
   errorMessage = "";
@@ -132,21 +138,33 @@ export class LoginComponent {
 
     this.auth
       .login(this.form.getRawValue())
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe()
       .subscribe({
-        next: () => {
-          void this.procesarLoginExitoso();
+        next: (loginResponse) => {
+          if (loginResponse.codigo == 0) {
+            void this.procesarLoginExitoso();
+          } else {
+            this.loading = false;
+            this.errorMessage =
+              loginResponse.mensaje ?? "Usuario o contraseña incorrectos.";
+          }
         },
-
         error: (error) => {
-          this.errorMessage =
-            error?.error?.mensaje ?? "Usuario o contraseña incorrectos.";
+          this.loading = false;
+
+          this.messages.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Error inesperado al iniciar sesión. Intentar mas tarde.",
+            life: 5000,
+          });
         },
       });
   }
 
   private async procesarLoginExitoso(): Promise<void> {
-    const actualizacionDisponible = await this.pwaUpdateService.hayActualizacion();
+    const actualizacionDisponible =
+      await this.pwaUpdateService.hayActualizacion();
 
     if (actualizacionDisponible) {
       /*
