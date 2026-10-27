@@ -9,6 +9,7 @@ import { InputTextModule } from "primeng/inputtext";
 import { DatePickerModule } from "primeng/datepicker";
 import { SelectModule } from "primeng/select";
 import { MessageModule } from "primeng/message";
+import { TagModule } from "primeng/tag";
 import { CheckboxModule } from "primeng/checkbox";
 import { InputNumberModule } from "primeng/inputnumber";
 import { CuentaService } from "../../core/services/cuenta.service";
@@ -31,80 +32,82 @@ import { MessageService } from "primeng/api";
     DatePickerModule,
     SelectModule,
     MessageModule,
+    TagModule,
     CheckboxModule,
     InputNumberModule,
     CurrencyPipe,
   ],
   template: `
-    <section class="page">
+    <section class="page management-page alerts-page">
       <div class="page-header">
-        <div>
-          <h1>Alertas</h1>
-          <p class="muted">Gestiona recordatorios y pagos fijos.</p>
+        <div class="management-heading">
+          <div class="management-title-icon alerts"><i class="pi pi-bell"></i></div>
+          <div>
+            <h1>Alertas</h1>
+            <p class="muted">Organiza recordatorios, pagos pendientes y compromisos recurrentes.</p>
+          </div>
         </div>
-        <p-button
-          label="Nueva alerta"
-          icon="pi pi-plus"
-          (onClick)="openNew()"
-        />
+        <p-button label="Nueva alerta" icon="pi pi-plus" (onClick)="openNew()" />
       </div>
 
       @if (errorMessage) {
-        <p-message severity="error" styleClass="w-full mb-3">{{
-          errorMessage
-        }}</p-message>
+        <p-message severity="error" styleClass="w-full mb-3">{{ errorMessage }}</p-message>
       }
 
-      <div class="card">
-        <p-table [value]="alertas" [loading]="loading">
+      <div class="management-summary-grid alerts-summary-grid">
+        <div class="summary-card compact-summary warning">
+          <div class="summary-icon"><i class="pi pi-clock"></i></div>
+          <div><span>Pendientes</span><strong>{{ pendingAlertsCount }}</strong></div>
+        </div>
+        <div class="summary-card compact-summary danger">
+          <div class="summary-icon"><i class="pi pi-exclamation-circle"></i></div>
+          <div><span>Vencidas</span><strong>{{ overdueAlertsCount }}</strong></div>
+        </div>
+        <div class="summary-card compact-summary success">
+          <div class="summary-icon"><i class="pi pi-check-circle"></i></div>
+          <div><span>Pagadas</span><strong>{{ paidAlertsCount }}</strong></div>
+        </div>
+      </div>
+
+      <div class="card table-card professional-table-card">
+        <div class="table-toolbar professional-toolbar">
+          <div class="toolbar-title"><i class="pi pi-bell"></i><div><strong>Mis alertas</strong><span>Seguimiento de tus próximos pagos y recordatorios</span></div></div>
+        </div>
+        <p-table
+          [value]="alertas"
+          [loading]="loading"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} alertas"
+        >
           <ng-template #header>
-            <tr>
-              <th>Descripción</th>
-              <th>Monto</th>
-              <th>Tipo</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Es recurrente</th>
-              <th>Acciones</th>
-            </tr>
+            <tr><th>Descripción</th><th>Monto</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th>Recurrente</th><th>Acciones</th></tr>
           </ng-template>
           <ng-template #body let-alerta>
             <tr [class.alerta-muy-vencida]="isOverdue(alerta)">
-              <td>{{ alerta.descripcion }}</td>
-              <td class="test-bold">
-                {{ alerta.monto | currency: "PEN" : "symbol" : "1.2-2" }}
-              </td>
-              <td>{{ alerta.tipo }}</td>
-              <td>{{ alerta.fechaAlerta | date: "dd/MM/yyyy" }}</td>
-              <td>{{ alerta.estado || "PENDIENTE" }}</td>
-              <td>{{ alerta.esRecurrente ? "Sí" : "No" }}</td>
+              <td><div class="alert-description"><i class="pi pi-bell"></i><strong>{{ alerta.descripcion }}</strong></div></td>
+              <td><strong>{{ alerta.monto | currency: 'PEN' : 'symbol' : '1.2-2' }}</strong></td>
+              <td><span class="type-pill">{{ formatAlertType(alerta.tipo) }}</span></td>
+              <td><span class="date-cell"><i class="pi pi-calendar"></i>{{ alerta.fechaAlerta | date: 'dd/MM/yyyy' }}</span></td>
+              <td><p-tag [value]="(alerta.estado || 'PENDIENTE') === 'PAGADO' ? 'Pagado' : (isOverdue(alerta) ? 'Vencido' : 'Pendiente')" [severity]="(alerta.estado || 'PENDIENTE') === 'PAGADO' ? 'success' : (isOverdue(alerta) ? 'danger' : 'warn')" /></td>
+              <td><p-tag [value]="alerta.esRecurrente ? 'Mensual' : 'No'" [severity]="alerta.esRecurrente ? 'info' : 'secondary'" /></td>
               <td>
-                @if (
-                  (alerta.estado || "PENDIENTE") !== "PAGADO" && canPay(alerta)
-                ) {
-                  <p-button
-                    icon="pi pi-check"
-                    severity="success"
-                    [text]="true"
-                    title="Registrar pago"
-                    (onClick)="pagar(alerta)"
-                  />
-                }
-                @if ((alerta.estado || "PENDIENTE") !== "PAGADO") {
-                  <p-button
-                    icon="pi pi-pencil"
-                    [text]="true"
-                    (onClick)="edit(alerta)"
-                  />
-                }
+                <div class="table-actions">
+                  @if ((alerta.estado || 'PENDIENTE') !== 'PAGADO' && canPay(alerta)) {
+                    <p-button icon="pi pi-check" severity="success" [text]="true" title="Registrar pago" (onClick)="pagar(alerta)" />
+                  }
+                  @if ((alerta.estado || 'PENDIENTE') !== 'PAGADO') {
+                    <p-button icon="pi pi-pencil" [text]="true" title="Editar alerta" (onClick)="edit(alerta)" />
+                  }
+                </div>
               </td>
             </tr>
           </ng-template>
-          <ng-template #emptymessage
-            ><tr>
-              <td colspan="6">No hay alertas.</td>
-            </tr></ng-template
-          >
+          <ng-template #emptymessage>
+            <tr><td colspan="7"><div class="management-empty"><i class="pi pi-bell-slash"></i><strong>No hay alertas registradas</strong><span>Crea una alerta para no olvidar tus próximos pagos.</span></div></td></tr>
+          </ng-template>
         </p-table>
       </div>
 
@@ -113,122 +116,34 @@ import { MessageService } from "primeng/api";
         [header]="editing ? 'Editar alerta' : 'Nueva alerta'"
         [modal]="true"
         [style]="{ width: 'min(600px, 95vw)' }"
+        styleClass="professional-dialog compact-form-dialog"
       >
         <form [formGroup]="form" (ngSubmit)="save()">
-          <div class="form-grid">
-            <div class="field full">
-              <label>Descripción</label>
-              <input pInputText formControlName="descripcion" />
-            </div>
-            <div class="field">
-              <label>Tipo</label>
-              <p-select
-                formControlName="tipo"
-                [options]="tipos"
-                placeholder="Selecciona un tipo"
-                [appendTo]="'body'"
-              />
-            </div>
-            <div class="field">
-              <label>Fecha de alerta</label
-              ><p-datepicker
-                formControlName="fechaAlerta"
-                dateFormat="yy-mm-dd"
-                [showIcon]="true"
-                [appendTo]="'body'"
-              />
-            </div>
-            <div class="field">
-              <label>Monto estimado</label
-              ><p-inputnumber
-                formControlName="monto"
-                (onFocus)="selectMoneyInput($event)"
-                mode="currency"
-                currency="PEN"
-                locale="es-PE"
-              />
-            </div>
-            <div class="field">
-              <label>Categoría</label
-              ><input
-                pInputText
-                formControlName="categoria"
-                placeholder="LUZ, INTERNET, ALIMENTOS..."
-              />
-            </div>
-            <div class="field">
-              <label>Cuenta para el pago</label
-              ><p-select
-                formControlName="idCuenta"
-                [options]="cuentas"
-                optionLabel="nombreCuenta"
-                optionValue="id"
-                placeholder="Opcional"
-                [appendTo]="'body'"
-              />
-            </div>
-            <div class="field">
-              <label>Estado</label
-              ><p-select
-                formControlName="estado"
-                [options]="estados"
-                [appendTo]="'body'"
-              />
-            </div>
-            <div class="field">
-              <label>Repetición</label>
-              <div class="checkbox-row">
-                <p-checkbox
-                  formControlName="esRecurrente"
-                  [binary]="true"
-                  inputId="recurrente"
-                /><label for="recurrente">Pago recurrente mensual</label>
-              </div>
-            </div>
-            @if (form.controls.esRecurrente.value) {
-              <div class="field">
-                <label>Día de cada mes</label
-                ><p-inputnumber formControlName="diaMes" [min]="1" [max]="31" />
-              </div>
-            }
+          <div class="form-intro">
+            <i class="pi pi-bell"></i>
+            <span>Define el pago, la fecha y si debe repetirse automáticamente cada mes.</span>
           </div>
-          <div class="actions">
-            <p-button
-              label="Cancelar"
-              [text]="true"
-              type="button"
-              (onClick)="dialogVisible = false"
-            />
-            <p-button
-              label="Guardar"
-              type="submit"
-              [loading]="saving"
-              [disabled]="form.invalid || saving"
-            />
+          <div class="form-grid compact-form-grid">
+            <div class="field full"><label>Descripción</label><input pInputText formControlName="descripcion" placeholder="Ej. Pago de internet" /></div>
+            <div class="field"><label>Tipo</label><p-select formControlName="tipo" [options]="tipos" placeholder="Selecciona un tipo" [appendTo]="'body'" /></div>
+            <div class="field"><label>Fecha de alerta</label><p-datepicker formControlName="fechaAlerta" dateFormat="yy-mm-dd" [showIcon]="true" [appendTo]="'body'" /></div>
+            <div class="field"><label>Monto estimado</label><p-inputnumber formControlName="monto" (onFocus)="selectMoneyInput($event)" mode="currency" currency="PEN" locale="es-PE" /></div>
+            <div class="field"><label>Categoría</label><input pInputText formControlName="categoria" placeholder="Ej. Luz, Internet, Alimentos" /></div>
+            <div class="field"><label>Cuenta para el pago</label><p-select formControlName="idCuenta" [options]="cuentas" optionLabel="nombreCuenta" optionValue="id" placeholder="Opcional" [appendTo]="'body'" /></div>
+            <div class="field"><label>Estado</label><p-select formControlName="estado" [options]="estados" [appendTo]="'body'" /></div>
+            <div class="field"><label>Repetición</label><div class="checkbox-row compact-checkbox"><p-checkbox formControlName="esRecurrente" [binary]="true" inputId="recurrente" /><label for="recurrente">Pago recurrente mensual</label></div></div>
+            @if (form.controls.esRecurrente.value) { <div class="field"><label>Día de cada mes</label><p-inputnumber formControlName="diaMes" [min]="1" [max]="31" /></div> }
+          </div>
+          <div class="actions dialog-actions">
+            <p-button label="Cancelar" [text]="true" type="button" (onClick)="dialogVisible = false" />
+            <p-button label="Guardar" icon="pi pi-check" type="submit" [loading]="saving" [disabled]="form.invalid || saving" />
           </div>
         </form>
       </p-dialog>
-      <p-dialog
-        [(visible)]="payConfirmVisible"
-        header="Confirmar pago"
-        [modal]="true"
-        [style]="{ width: 'min(500px, 95vw)' }"
-      >
-        <p>
-          ¿Registrar este pago? Si tiene monto y cuenta asociados, también se
-          creará el gasto.
-        </p>
-        <div class="actions">
-          <p-button
-            label="Cancelar"
-            [text]="true"
-            (onClick)="cancelPay()"
-          /><p-button
-            label="Aceptar"
-            severity="success"
-            (onClick)="confirmPay()"
-          />
-        </div>
+
+      <p-dialog [(visible)]="payConfirmVisible" header="Confirmar pago" [modal]="true" [style]="{ width: 'min(460px, 95vw)' }" styleClass="professional-dialog compact-form-dialog">
+        <div class="confirm-box success-confirm"><i class="pi pi-check-circle"></i><div><strong>Registrar pago</strong><span>Si la alerta tiene monto y cuenta asociados, también se creará el gasto.</span></div></div>
+        <div class="actions dialog-actions"><p-button label="Cancelar" [text]="true" (onClick)="cancelPay()" /><p-button label="Registrar pago" icon="pi pi-check" severity="success" (onClick)="confirmPay()" /></div>
       </p-dialog>
     </section>
   `,
@@ -274,6 +189,22 @@ export class AlertasComponent implements OnInit {
     esRecurrente: [false],
     diaMes: [new Date().getDate()],
   });
+
+  get pendingAlertsCount(): number {
+    return this.alertas.filter((a) => (a.estado ?? "PENDIENTE") !== "PAGADO").length;
+  }
+
+  get paidAlertsCount(): number {
+    return this.alertas.filter((a) => (a.estado ?? "PENDIENTE") === "PAGADO").length;
+  }
+
+  get overdueAlertsCount(): number {
+    return this.alertas.filter((a) => this.isOverdue(a)).length;
+  }
+
+  formatAlertType(tipo: string): string {
+    return (tipo || "").replaceAll("_", " ");
+  }
 
   ngOnInit(): void {
     this.load();

@@ -31,216 +31,186 @@ import { UsuarioResponse } from "../../core/models/api.models";
     MessageModule,
     TooltipModule,
   ],
-  template: ` <section class="page">
-    <div class="page-header">
-      <div>
-        <div class="eyebrow">ADMINISTRACIÓN</div>
-        <h1>Usuarios</h1>
-        <p class="muted">Administra los usuarios registrados.</p>
-      </div>
-      <p-button label="Nuevo usuario" icon="pi pi-plus" (onClick)="openNew()" />
-    </div>
-
-    @if (errorMessage) {
-      <p-message severity="error" styleClass="w-full mb-3">{{
-        errorMessage
-      }}</p-message>
-    }
-    <div class="card table-card">
-      <div class="table-toolbar">
-        <div class="search-box">
-          <i class="pi pi-search"></i>
-          <input
-            pInputText
-            [(ngModel)]="search"
-            placeholder="Buscar usuario..."
-          />
-        </div>
-      </div>
-
-      <p-table
-        [value]="filteredUsuarios"
-        [loading]="loading"
-        [paginator]="true"
-        [rows]="10"
-      >
-        <ng-template #header>
-          <tr>
-            <th>ID</th>
-            <th>Usuario</th>
-            <th>Nombre</th>
-            <th>Correo</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-u>
-          <tr>
-            <td>#{{ u.id }}</td>
-            <td>
-              <strong>{{ u.nombreUsuario }}</strong>
-            </td>
-            <td>{{ u.nombreCompleto }}</td>
-            <td>{{ u.correoElectronico }}</td>
-            <td>
-              <p-tag
-                [value]="u.estadoRegistro === 1 ? 'Activo' : 'Inactivo'"
-                [severity]="u.estadoRegistro === 1 ? 'success' : 'secondary'"
-              />
-            </td>
-            <td>
-              <p-button icon="pi pi-eye" [text]="true" (onClick)="view(u)" />
-              <p-button icon="pi pi-pencil" [text]="true" (onClick)="edit(u)" />
-              @if (!isAdministratorUser(u)) {
-                @if (u.estadoRegistro === 1) {
-                  <p-button
-                    icon="pi pi-user-minus"
-                    severity="danger"
-                    [text]="true"
-                    pTooltip="Desactivar"
-                    (onClick)="remove(u)"
-                  />
-                } @else {
-                  <p-button
-                    icon="pi pi-user-plus"
-                    severity="success"
-                    [text]="true"
-                    pTooltip="Activar"
-                    (onClick)="activate(u)"
-                  />
-                }
-              }
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-
-    <p-dialog
-      [(visible)]="detailVisible"
-      header="Detalle del usuario"
-      [modal]="true"
-      [style]="{ width: '520px' }"
-    >
-      @if (selected) {
-        <div class="detail-grid">
+  template: `
+    <section class="page management-page">
+      <div class="page-header">
+        <div class="management-heading">
+          <div class="management-title-icon users"><i class="pi pi-users"></i></div>
           <div>
-            <span>ID</span><strong>#{{ selected.id }}</strong>
-          </div>
-          <div>
-            <span>Estado</span
-            ><strong>{{
-              selected.estadoRegistro === 1 ? "Activo" : "Inactivo"
-            }}</strong>
-          </div>
-          <div class="full">
-            <span>Usuario</span><strong>{{ selected.nombreUsuario }}</strong>
-          </div>
-          <div class="full">
-            <span>Nombre completo</span
-            ><strong>{{ selected.nombreCompleto }}</strong>
-          </div>
-          <div class="full">
-            <span>Correo</span><strong>{{ selected.correoElectronico }}</strong>
+            <div class="eyebrow">ADMINISTRACIÓN</div>
+            <h1>Usuarios</h1>
+            <p class="muted">Administra accesos, estados y datos de los usuarios registrados.</p>
           </div>
         </div>
+        <p-button label="Nuevo usuario" icon="pi pi-plus" (onClick)="openNew()" />
+      </div>
+
+      @if (errorMessage) {
+        <p-message severity="error" styleClass="w-full mb-3">{{ errorMessage }}</p-message>
       }
-    </p-dialog>
 
-    <p-dialog
-      [(visible)]="formVisible"
-      [header]="editing ? 'Editar usuario' : 'Nuevo usuario'"
-      [modal]="true"
-      [style]="{ width: '560px' }"
-    >
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="form-grid">
-          <div class="field">
-            <label>Usuario</label>
-            <input
-              pInputText
-              formControlName="nombreUsuario"
-              [readonly]="!!editing"
-            />
-            @if (editing) {
-              <small class="muted"
-                >El nombre de usuario no se puede modificar una vez
-                creado.</small
-              >
-            }
-          </div>
-          <div class="field">
-            <label>Contraseña</label>
-            <input
-              pInputText
-              type="password"
-              formControlName="hashContrasena"
-              [placeholder]="
-                editing
-                  ? 'Dejar vacío para mantener la actual'
-                  : 'Ingresa una contraseña'
-              "
-            />
-            @if (editing) {
-              <small class="muted"
-                >Déjala vacía para conservar la contraseña actual.</small
-              >
-            }
-          </div>
-          <div class="field full">
-            <label>Nombre completo</label
-            ><input pInputText formControlName="nombreCompleto" />
-          </div>
-          <div class="field full">
-            <label>Correo</label
-            ><input
-              pInputText
-              type="email"
-              formControlName="correoElectronico"
-            />
-          </div>
+      <div class="management-summary-grid">
+        <div class="summary-card compact-summary">
+          <div class="summary-icon"><i class="pi pi-users"></i></div>
+          <div><span>Total de usuarios</span><strong>{{ usuarios.length }}</strong></div>
         </div>
-        <div class="actions">
-          <p-button
-            label="Cancelar"
-            [text]="true"
-            type="button"
-            (onClick)="formVisible = false"
-          />
-          <p-button label="Guardar" type="submit" [disabled]="form.invalid" />
+        <div class="summary-card compact-summary success">
+          <div class="summary-icon"><i class="pi pi-user-plus"></i></div>
+          <div><span>Usuarios activos</span><strong>{{ activeUsersCount }}</strong></div>
         </div>
-      </form>
-    </p-dialog>
+        <div class="summary-card compact-summary muted-card">
+          <div class="summary-icon"><i class="pi pi-user-minus"></i></div>
+          <div><span>Usuarios inactivos</span><strong>{{ inactiveUsersCount }}</strong></div>
+        </div>
+      </div>
 
-    <p-dialog
-      [(visible)]="deleteVisible"
-      header="Confirmar baja de usuario"
-      [modal]="true"
-      [style]="{ width: 'min(480px, 95vw)' }"
-    >
-      <div class="field">
-        <p>
-          ¿Deseas desactivar al usuario
-          <strong>{{ pendingDelete?.nombreUsuario }}</strong
-          >?
-        </p>
-        <label>Motivo de baja</label>
-        <input
-          pInputText
-          [(ngModel)]="deleteReason"
-          placeholder="Motivo de baja"
-        />
+      <div class="card table-card professional-table-card">
+        <div class="table-toolbar professional-toolbar">
+          <div class="search-box">
+            <i class="pi pi-search"></i>
+            <input pInputText [(ngModel)]="search" placeholder="Buscar por usuario, nombre o correo..." />
+          </div>
+          <div class="toolbar-result"><i class="pi pi-list"></i><span>{{ filteredUsuarios.length }} registro(s)</span></div>
+        </div>
+
+        <p-table
+          [value]="filteredUsuarios"
+          [loading]="loading"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+        >
+          <ng-template #header>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-u>
+            <tr>
+              <td><span class="id-pill">#{{ u.id }}</span></td>
+              <td>
+                <div class="entity-cell">
+                  <div class="entity-avatar">{{ (u.nombreUsuario || 'U').charAt(0).toUpperCase() }}</div>
+                  <strong>{{ u.nombreUsuario }}</strong>
+                </div>
+              </td>
+              <td>{{ u.nombreCompleto }}</td>
+              <td><span class="secondary-value">{{ u.correoElectronico }}</span></td>
+              <td>
+                <p-tag
+                  [value]="u.estadoRegistro === 1 ? 'Activo' : 'Inactivo'"
+                  [severity]="u.estadoRegistro === 1 ? 'success' : 'secondary'"
+                />
+              </td>
+              <td>
+                <div class="table-actions">
+                  <p-button icon="pi pi-eye" [text]="true" pTooltip="Ver detalle" (onClick)="view(u)" />
+                  <p-button icon="pi pi-pencil" [text]="true" pTooltip="Editar" (onClick)="edit(u)" />
+                  @if (!isAdministratorUser(u)) {
+                    @if (u.estadoRegistro === 1) {
+                      <p-button icon="pi pi-user-minus" severity="danger" [text]="true" pTooltip="Desactivar" (onClick)="remove(u)" />
+                    } @else {
+                      <p-button icon="pi pi-user-plus" severity="success" [text]="true" pTooltip="Activar" (onClick)="activate(u)" />
+                    }
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="6"><div class="management-empty"><i class="pi pi-users"></i><strong>No hay usuarios para mostrar</strong><span>Prueba con otro criterio de búsqueda.</span></div></td></tr>
+          </ng-template>
+        </p-table>
       </div>
-      <div class="actions">
-        <p-button label="Cancelar" [text]="true" (onClick)="cancelDelete()" />
-        <p-button
-          label="Aceptar"
-          severity="danger"
-          (onClick)="confirmDelete()"
-        />
-      </div>
-    </p-dialog>
-  </section>`,
+
+      <p-dialog
+        [(visible)]="detailVisible"
+        header="Detalle del usuario"
+        [modal]="true"
+        [style]="{ width: 'min(520px, 95vw)' }"
+        styleClass="professional-dialog"
+      >
+        @if (selected) {
+          <div class="detail-profile-head">
+            <div class="detail-avatar">{{ (selected.nombreUsuario || 'U').charAt(0).toUpperCase() }}</div>
+            <div><strong>{{ selected.nombreCompleto }}</strong><span>@{{ selected.nombreUsuario }}</span></div>
+          </div>
+          <div class="detail-grid">
+            <div><span>ID</span><strong>#{{ selected.id }}</strong></div>
+            <div><span>Estado</span><strong>{{ selected.estadoRegistro === 1 ? 'Activo' : 'Inactivo' }}</strong></div>
+            <div class="full"><span>Correo electrónico</span><strong>{{ selected.correoElectronico }}</strong></div>
+          </div>
+        }
+      </p-dialog>
+
+      <p-dialog
+        [(visible)]="formVisible"
+        [header]="editing ? 'Editar usuario' : 'Nuevo usuario'"
+        [modal]="true"
+        [style]="{ width: 'min(560px, 95vw)' }"
+        styleClass="professional-dialog compact-form-dialog"
+      >
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="form-intro">
+            <i class="pi pi-user-edit"></i>
+            <span>{{ editing ? 'Actualiza los datos permitidos del usuario.' : 'Completa los datos para crear un nuevo acceso.' }}</span>
+          </div>
+          <div class="form-grid compact-form-grid">
+            <div class="field">
+              <label>Usuario</label>
+              <input pInputText formControlName="nombreUsuario" [readonly]="!!editing" placeholder="Ej. breyes" />
+              @if (editing) { <small class="muted">El usuario no se puede modificar.</small> }
+            </div>
+            <div class="field">
+              <label>Contraseña</label>
+              <input pInputText type="password" formControlName="hashContrasena" [placeholder]="editing ? 'Mantener contraseña actual' : 'Ingresa una contraseña'" />
+              @if (editing) { <small class="muted">Déjala vacía para conservar la actual.</small> }
+            </div>
+            <div class="field full">
+              <label>Nombre completo</label>
+              <input pInputText formControlName="nombreCompleto" placeholder="Nombres y apellidos" />
+            </div>
+            <div class="field full">
+              <label>Correo electrónico</label>
+              <input pInputText type="email" formControlName="correoElectronico" placeholder="correo@ejemplo.com" />
+            </div>
+          </div>
+          <div class="actions dialog-actions">
+            <p-button label="Cancelar" [text]="true" type="button" (onClick)="formVisible = false" />
+            <p-button label="Guardar" icon="pi pi-check" type="submit" [disabled]="form.invalid" />
+          </div>
+        </form>
+      </p-dialog>
+
+      <p-dialog
+        [(visible)]="deleteVisible"
+        header="Confirmar baja de usuario"
+        [modal]="true"
+        [style]="{ width: 'min(480px, 95vw)' }"
+        styleClass="professional-dialog compact-form-dialog"
+      >
+        <div class="confirm-box danger-confirm">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div><strong>Desactivar usuario</strong><span>El usuario <b>{{ pendingDelete?.nombreUsuario }}</b> ya no podrá acceder.</span></div>
+        </div>
+        <div class="field">
+          <label>Motivo de baja</label>
+          <input pInputText [(ngModel)]="deleteReason" placeholder="Describe brevemente el motivo" />
+        </div>
+        <div class="actions dialog-actions">
+          <p-button label="Cancelar" [text]="true" (onClick)="cancelDelete()" />
+          <p-button label="Desactivar" severity="danger" icon="pi pi-user-minus" (onClick)="confirmDelete()" />
+        </div>
+      </p-dialog>
+    </section>
+  `,
 })
 export class UsuariosComponent implements OnInit {
   private service = inject(UsuarioService);
@@ -275,6 +245,14 @@ export class UsuariosComponent implements OnInit {
             .includes(q),
         )
       : this.usuarios;
+  }
+
+  get activeUsersCount(): number {
+    return this.usuarios.filter((u) => u.estadoRegistro === 1).length;
+  }
+
+  get inactiveUsersCount(): number {
+    return this.usuarios.filter((u) => u.estadoRegistro !== 1).length;
   }
 
   ngOnInit() {

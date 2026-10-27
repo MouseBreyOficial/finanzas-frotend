@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from "@angular/core";
-import { DatePipe, DecimalPipe, CurrencyPipe } from "@angular/common";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { DatePipe, DecimalPipe } from "@angular/common";
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { finalize } from "rxjs";
 import { TableModule } from "primeng/table";
 import { ButtonModule } from "primeng/button";
@@ -23,6 +23,7 @@ import {
   selector: "app-transferencias",
   standalone: true,
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     DatePipe,
     DecimalPipe,
@@ -34,17 +35,21 @@ import {
     SelectModule,
     DatePickerModule,
     MessageModule,
-    CurrencyPipe,
   ],
   template: `
     <section class="page">
       <div class="page-header">
-        <div>
-          <h1>Transferencias</h1>
-          <p class="muted">
-            Transfiere dinero entre tus cuentas sin afectar tus ingresos ni
-            gastos.
-          </p>
+        <div class="movement-heading">
+          <div class="movement-title-icon transfer">
+            <i class="pi pi-arrow-right-arrow-left"></i>
+          </div>
+          <div>
+            <h1>Transferencias</h1>
+            <p class="muted">
+              Transfiere dinero entre tus cuentas sin afectar tus ingresos ni
+              gastos.
+            </p>
+          </div>
         </div>
         <p-button
           label="Transferir"
@@ -67,9 +72,96 @@ import {
         <br />
       }
 
-      <div class="card">
+      <div class="card movement-filter-card">
+        <div class="movement-filters movement-filters-transferencias">
+          <div class="field">
+            <label>Fecha desde</label>
+            <p-datepicker
+              [(ngModel)]="filterFechaDesde"
+              [ngModelOptions]="{ standalone: true }"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [showClear]="true"
+              appendTo="body"
+              placeholder="dd/mm/aaaa"
+            />
+          </div>
+
+          <div class="field">
+            <label>Fecha hasta</label>
+            <p-datepicker
+              [(ngModel)]="filterFechaHasta"
+              [ngModelOptions]="{ standalone: true }"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [showClear]="true"
+              appendTo="body"
+              placeholder="dd/mm/aaaa"
+            />
+          </div>
+
+          <div class="field">
+            <label>Cuenta origen</label>
+            <p-select
+              [(ngModel)]="filterCuentaOrigenId"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="cuentas"
+              optionLabel="nombreCuenta"
+              optionValue="id"
+              placeholder="Todas"
+              [showClear]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field">
+            <label>Cuenta destino</label>
+            <p-select
+              [(ngModel)]="filterCuentaDestinoId"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="cuentas"
+              optionLabel="nombreCuenta"
+              optionValue="id"
+              placeholder="Todas"
+              [showClear]="true"
+              appendTo="body"
+            />
+          </div>
+
+          <div class="field movement-search-field">
+            <label>Descripción</label>
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                [(ngModel)]="filterDescripcion"
+                [ngModelOptions]="{ standalone: true }"
+                placeholder="Buscar por descripción"
+                (keyup.enter)="applyFilters()"
+              />
+            </span>
+          </div>
+
+          <div class="movement-filter-actions">
+            <p-button
+              label="Buscar"
+              icon="pi pi-search"
+              (onClick)="applyFilters()"
+            />
+            <p-button
+              label="Limpiar"
+              icon="pi pi-filter-slash"
+              severity="secondary"
+              [outlined]="true"
+              (onClick)="clearFilters()"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="card movement-table-card">
         <p-table
-          [value]="transferencias"
+          [value]="filteredTransferencias"
           [loading]="loading"
           [paginator]="true"
           [rows]="10"
@@ -100,7 +192,7 @@ import {
               <td>{{ row.fechaTransferencia | date: "dd/MM/yyyy" }}</td>
               <td>{{ row.nombreCuentaOrigen }}</td>
               <td>{{ row.nombreCuentaDestino }}</td>
-              <td>{{ row.monto | currency }}</td>
+              <td class="transfer-amount-cell">S/ {{ row.monto | number: "1.2-2" }}</td>
               <td>{{ row.descripcion || "-" }}</td>
               <td>
                 <p-button
@@ -114,7 +206,13 @@ import {
           </ng-template>
           <ng-template #emptymessage>
             <tr>
-              <td colspan="6">No hay transferencias registradas.</td>
+              <td colspan="6">
+                <div class="movement-empty-state">
+                  <i class="pi pi-arrow-right-arrow-left"></i>
+                  <strong>No hay transferencias que coincidan con los filtros.</strong>
+                  <span>Prueba cambiando o limpiando los criterios de búsqueda.</span>
+                </div>
+              </td>
             </tr>
           </ng-template>
         </p-table>
@@ -313,6 +411,12 @@ export class TransferenciasComponent implements OnInit {
 
   cuentas: CuentaResponse[] = [];
   transferencias: TransferenciaResponse[] = [];
+  filteredTransferencias: TransferenciaResponse[] = [];
+  filterFechaDesde: Date | null = null;
+  filterFechaHasta: Date | null = null;
+  filterCuentaOrigenId: number | null = null;
+  filterCuentaDestinoId: number | null = null;
+  filterDescripcion = "";
   selectedTransferencia: TransferenciaResponse | null = null;
   transferDialogVisible = false;
   detailDialogVisible = false;
@@ -370,11 +474,65 @@ export class TransferenciasComponent implements OnInit {
       .listarPorUsuario(idUsuario)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
-        next: (data) => (this.transferencias = data),
+        next: (data) => {
+          this.transferencias = data;
+          this.applyFilters();
+        },
         error: (e) =>
           (this.errorMessage =
             e?.error?.mensaje ?? "No se pudieron cargar las transferencias."),
       });
+  }
+
+
+
+  applyFilters(): void {
+    const desde = this.filterFechaDesde
+      ? this.toDateString(this.filterFechaDesde)
+      : null;
+    const hasta = this.filterFechaHasta
+      ? this.toDateString(this.filterFechaHasta)
+      : null;
+    const descripcion = this.normalize(this.filterDescripcion);
+
+    this.filteredTransferencias = this.transferencias.filter((item) => {
+      const matchesDesde = !desde || item.fechaTransferencia >= desde;
+      const matchesHasta = !hasta || item.fechaTransferencia <= hasta;
+      const matchesOrigen =
+        !this.filterCuentaOrigenId ||
+        item.idCuentaOrigen === this.filterCuentaOrigenId;
+      const matchesDestino =
+        !this.filterCuentaDestinoId ||
+        item.idCuentaDestino === this.filterCuentaDestinoId;
+      const matchesDescripcion =
+        !descripcion ||
+        this.normalize(item.descripcion).includes(descripcion);
+
+      return (
+        matchesDesde &&
+        matchesHasta &&
+        matchesOrigen &&
+        matchesDestino &&
+        matchesDescripcion
+      );
+    });
+  }
+
+  clearFilters(): void {
+    this.filterFechaDesde = null;
+    this.filterFechaHasta = null;
+    this.filterCuentaOrigenId = null;
+    this.filterCuentaDestinoId = null;
+    this.filterDescripcion = "";
+    this.applyFilters();
+  }
+
+  private normalize(value: string | null | undefined): string {
+    return (value ?? "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
   }
 
   openTransfer(): void {

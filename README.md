@@ -74,3 +74,11 @@ Si el backend bloquea `http://localhost:4200`, habilita CORS en Spring Boot para
 - Detalle de usuario consulta GET /usuarios/{id} y usa response.data.
 - Alertas con overlays corregidos (`appendTo=body`), recurrencia, estado, monto, categoría, cuenta y registrar pago.
 - Compatible con los endpoints nuevos incluidos en el backend actualizado.
+
+## V7.14 - Pulido final de UX
+
+- Formularios de dialogs más compactos en escritorio, manteniendo área táctil cómoda en móvil.
+- Rediseño visual de Usuarios, Cuentas y Alertas con resúmenes, mejor jerarquía y tablas paginadas.
+- Scroll vertical visible en el menú lateral cuando la altura disponible no alcanza.
+- Scroll horizontal visible en la navegación inferior móvil.
+- Se mantienen tema claro/oscuro, filtros de movimientos, paginación y barra móvil ampliada.

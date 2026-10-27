@@ -1,6 +1,6 @@
 import { DatePipe, DecimalPipe } from "@angular/common";
 import { Component, inject, OnInit } from "@angular/core";
-import { FormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { finalize, forkJoin } from "rxjs";
 import { TableModule } from "primeng/table";
 import { ButtonModule } from "primeng/button";
@@ -27,6 +27,7 @@ import { JsonPipe } from "@angular/common";
   selector: "app-gastos",
   standalone: true,
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     DatePipe,
     DecimalPipe,
@@ -42,11 +43,16 @@ import { JsonPipe } from "@angular/common";
   ],
   template: ` <section class="page">
     <div class="page-header">
-      <div>
-        <h1>Gastos</h1>
-        <p class="muted">
-          Registra gastos y controla su impacto en tus cuentas e ingresos.
-        </p>
+      <div class="movement-heading">
+        <div class="movement-title-icon expense">
+          <i class="pi pi-arrow-down-right"></i>
+        </div>
+        <div>
+          <h1>Gastos</h1>
+          <p class="muted">
+            Registra gastos y controla su impacto en tus cuentas e ingresos.
+          </p>
+        </div>
       </div>
       <p-button label="Nuevo gasto" icon="pi pi-plus" (onClick)="openNew()" />
     </div>
@@ -57,7 +63,92 @@ import { JsonPipe } from "@angular/common";
       }}</p-message>
     }
 
-    <div class="grid grid-2">
+    <div class="card movement-filter-card">
+      <div class="movement-filters movement-filters-gastos">
+        <div class="field">
+          <label>Fecha desde</label>
+          <p-datepicker
+            [(ngModel)]="filterFechaDesde"
+            [ngModelOptions]="{ standalone: true }"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [showClear]="true"
+            appendTo="body"
+            placeholder="dd/mm/aaaa"
+          />
+        </div>
+
+        <div class="field">
+          <label>Fecha hasta</label>
+          <p-datepicker
+            [(ngModel)]="filterFechaHasta"
+            [ngModelOptions]="{ standalone: true }"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [showClear]="true"
+            appendTo="body"
+            placeholder="dd/mm/aaaa"
+          />
+        </div>
+
+        <div class="field">
+          <label>Cuenta</label>
+          <p-select
+            [(ngModel)]="filterCuentaId"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="cuentas"
+            optionLabel="nombreCuenta"
+            optionValue="id"
+            placeholder="Todas"
+            [showClear]="true"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="field">
+          <label>Categoría</label>
+          <p-select
+            [(ngModel)]="filterCategoria"
+            [ngModelOptions]="{ standalone: true }"
+            [options]="categorias"
+            placeholder="Todas"
+            [showClear]="true"
+            appendTo="body"
+          />
+        </div>
+
+        <div class="field movement-search-field">
+          <label>Descripción</label>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              [(ngModel)]="filterDescripcion"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Buscar por descripción"
+              (keyup.enter)="applyFilters()"
+            />
+          </span>
+        </div>
+
+        <div class="movement-filter-actions">
+          <p-button
+            label="Buscar"
+            icon="pi pi-search"
+            (onClick)="applyFilters()"
+          />
+          <p-button
+            label="Limpiar"
+            icon="pi pi-filter-slash"
+            severity="secondary"
+            [outlined]="true"
+            (onClick)="clearFilters()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2 movement-summary-grid">
       <div class="card">
         <h3>Promedio mensual por categoría</h3>
         <p-chart type="bar" [data]="averageChart" [options]="chartOptions" />
@@ -65,14 +156,31 @@ import { JsonPipe } from "@angular/common";
       <div class="card">
         <h3>Resumen</h3>
         <div class="stat-value">S/ {{ total | number: "1.2-2" }}</div>
-        <div class="muted">Total de gastos cargados</div>
+        <div class="muted">Total de gastos según los filtros aplicados</div>
       </div>
     </div>
-    <div class="card" style="margin-top:1rem">
-      <p-table [value]="rows" [loading]="loading">
+
+    <div class="card movement-table-card">
+      <p-table
+        [value]="filteredRows"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20, 50]"
+        sortField="item.fecha"
+        [sortOrder]="-1"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} gastos"
+        [tableStyle]="{ 'min-width': '60rem' }"
+      >
         <ng-template #header>
           <tr>
-            <th>Fecha</th>
+            <th pSortableColumn="item.fecha">
+              <div class="table-header-sort">
+                Fecha
+                <p-sortIcon field="item.fecha" />
+              </div>
+            </th>
             <th>Cuenta</th>
             <th>Categoría</th>
             <th>Monto</th>
@@ -85,12 +193,13 @@ import { JsonPipe } from "@angular/common";
             <td>{{ row.item.fecha | date: "dd/MM/yyyy" }}</td>
             <td>{{ accountName(row.item.idCuenta) }}</td>
             <td>{{ row.item.categoria }}</td>
-            <td>S/ {{ row.item.monto | number: "1.2-2" }}</td>
+            <td class="expense-amount">S/ {{ row.item.monto | number: "1.2-2" }}</td>
             <td>{{ row.item.descripcion }}</td>
             <td>
               <p-button
                 icon="pi pi-pencil"
                 [text]="true"
+                ariaLabel="Editar gasto"
                 (onClick)="edit(row.item)"
               />
             </td>
@@ -98,7 +207,13 @@ import { JsonPipe } from "@angular/common";
         </ng-template>
         <ng-template #emptymessage>
           <tr>
-            <td colspan="6">No hay gastos.</td>
+            <td colspan="6">
+              <div class="movement-empty-state">
+                <i class="pi pi-inbox"></i>
+                <strong>No hay gastos que coincidan con los filtros.</strong>
+                <span>Prueba cambiando o limpiando los criterios de búsqueda.</span>
+              </div>
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -252,6 +367,12 @@ export class GastosComponent implements OnInit {
 
   cuentas: CuentaResponse[] = [];
   rows: { item: GastoResponse }[] = [];
+  filteredRows: { item: GastoResponse }[] = [];
+  filterFechaDesde: Date | null = null;
+  filterFechaHasta: Date | null = null;
+  filterCuentaId: number | null = null;
+  filterCategoria: string | null = null;
+  filterDescripcion = "";
   ingresos: IngresoResponse[] = [];
   categorias: string[] = [];
   editing: GastoResponse | null = null;
@@ -295,6 +416,7 @@ export class GastosComponent implements OnInit {
   loadRows() {
     if (!this.cuentas.length) {
       this.rows = [];
+      this.filteredRows = [];
       this.total = 0;
       return;
     }
@@ -307,10 +429,7 @@ export class GastosComponent implements OnInit {
             .flat()
             .map((item) => ({ item }))
             .sort((a, b) => b.item.fecha.localeCompare(a.item.fecha));
-          this.total = this.rows.reduce(
-            (s, x) => s + Number(x.item.monto || 0),
-            0,
-          );
+          this.applyFilters();
         },
         error: () => (this.errorMessage = "No se pudieron cargar los gastos."),
       });
@@ -349,6 +468,57 @@ export class GastosComponent implements OnInit {
       },
       error: () => (this.averageChart = { labels: [], datasets: [] }),
     });
+  }
+
+
+
+  applyFilters(): void {
+    const desde = this.filterFechaDesde ? this.fmt(this.filterFechaDesde) : null;
+    const hasta = this.filterFechaHasta ? this.fmt(this.filterFechaHasta) : null;
+    const categoria = this.normalize(this.filterCategoria);
+    const descripcion = this.normalize(this.filterDescripcion);
+
+    this.filteredRows = this.rows.filter(({ item }) => {
+      const matchesDesde = !desde || item.fecha >= desde;
+      const matchesHasta = !hasta || item.fecha <= hasta;
+      const matchesCuenta =
+        !this.filterCuentaId || item.idCuenta === this.filterCuentaId;
+      const matchesCategoria =
+        !categoria || this.normalize(item.categoria) === categoria;
+      const matchesDescripcion =
+        !descripcion ||
+        this.normalize(item.descripcion).includes(descripcion);
+
+      return (
+        matchesDesde &&
+        matchesHasta &&
+        matchesCuenta &&
+        matchesCategoria &&
+        matchesDescripcion
+      );
+    });
+
+    this.total = this.filteredRows.reduce(
+      (sum, row) => sum + Number(row.item.monto || 0),
+      0,
+    );
+  }
+
+  clearFilters(): void {
+    this.filterFechaDesde = null;
+    this.filterFechaHasta = null;
+    this.filterCuentaId = null;
+    this.filterCategoria = null;
+    this.filterDescripcion = "";
+    this.applyFilters();
+  }
+
+  private normalize(value: string | null | undefined): string {
+    return (value ?? "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
   }
 
   accountName(id: number) {

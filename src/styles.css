@@ -1775,3 +1775,1089 @@ body {
     z-index: 1000;
   }
 }
+/* V7.12 - Movimientos: filtros, paginacion y navegacion movil mas comoda */
+.movement-filter-card {
+  margin-bottom: 1rem;
+}
+
+.movement-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(240px, 1.35fr) auto;
+  gap: .85rem;
+  align-items: end;
+}
+
+.movement-filters-gastos,
+.movement-filters-transferencias {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(240px, 1.35fr) auto;
+}
+
+.movement-filters .field {
+  min-width: 0;
+  margin: 0;
+}
+
+.movement-filters .field > label {
+  display: block;
+  margin-bottom: .4rem;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--app-muted);
+}
+
+.movement-filters p-datepicker,
+.movement-filters p-select,
+.movement-filters .p-datepicker,
+.movement-filters .p-select,
+.movement-filters input {
+  width: 100%;
+}
+
+.movement-search-field .p-input-icon-left {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.movement-search-field .p-input-icon-left > i {
+  position: absolute;
+  left: .8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--app-muted);
+  z-index: 1;
+}
+
+.movement-search-field .p-input-icon-left > input {
+  padding-left: 2.35rem;
+}
+
+.movement-filter-actions {
+  display: flex;
+  align-items: end;
+  gap: .55rem;
+  white-space: nowrap;
+}
+
+.movement-table-card {
+  margin-top: 1rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.movement-table-card .p-datatable-table-container {
+  overflow-x: auto;
+}
+
+.movement-summary-grid {
+  margin-top: 1rem;
+}
+
+.movement-empty-state {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  text-align: center;
+  color: var(--app-muted);
+  padding: 1.5rem;
+}
+
+.movement-empty-state i {
+  font-size: 1.8rem;
+  color: var(--p-primary-color);
+}
+
+.movement-empty-state strong {
+  color: var(--app-text);
+}
+
+.income-amount {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.expense-amount {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.transfer-amount-cell {
+  color: var(--p-primary-color);
+  font-weight: 700;
+}
+
+@media (max-width: 1200px) {
+  .movement-filters,
+  .movement-filters-gastos,
+  .movement-filters-transferencias {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .movement-search-field {
+    grid-column: span 2;
+  }
+
+  .movement-filter-actions {
+    grid-column: span 2;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 760px) {
+  .movement-filters,
+  .movement-filters-gastos,
+  .movement-filters-transferencias {
+    grid-template-columns: 1fr;
+  }
+
+  .movement-search-field,
+  .movement-filter-actions {
+    grid-column: auto;
+  }
+
+  .movement-filter-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .movement-filter-actions p-button,
+  .movement-filter-actions .p-button {
+    width: 100%;
+  }
+
+  /* La barra sigue pegada abajo; lo que aumenta es su TAMANO y area tactil. */
+  body {
+    padding-bottom: calc(98px + env(safe-area-inset-bottom));
+  }
+
+  .sidebar {
+    height: calc(88px + env(safe-area-inset-bottom));
+    padding: .55rem .45rem max(.55rem, env(safe-area-inset-bottom));
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+
+  .sidebar nav {
+    min-height: 72px;
+    align-items: stretch;
+  }
+
+  .sidebar .nav-item {
+    flex: 0 0 74px;
+    height: 72px;
+    min-height: 72px;
+    padding: .55rem .4rem;
+    gap: .35rem;
+    border-radius: 12px;
+    font-size: .68rem;
+  }
+
+  .sidebar .nav-item span {
+    max-width: 70px;
+    line-height: 1.15;
+  }
+
+  .sidebar .nav-item i {
+    font-size: 1.18rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .movement-filter-card {
+    padding: .9rem;
+  }
+
+  .movement-filter-actions {
+    gap: .45rem;
+  }
+}
+
+.movement-heading {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  min-width: 0;
+}
+
+.movement-title-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  font-size: 1.25rem;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.movement-title-icon.income {
+  color: #10b981;
+  background: color-mix(in srgb, #10b981 14%, transparent);
+}
+
+.movement-title-icon.expense {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 14%, transparent);
+}
+
+.movement-title-icon.transfer {
+  color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 14%, transparent);
+}
+
+@media (max-width: 480px) {
+  .movement-title-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    font-size: 1.1rem;
+  }
+}
+
+/* =========================================================
+   V7.13 - Tema claro profesional y navegacion adaptativa
+   ========================================================= */
+:root {
+  --app-page-bg: color-mix(in srgb, var(--p-surface-50) 94%, var(--p-primary-50) 6%);
+  --app-sidebar-bg: #ffffff;
+  --app-sidebar-border: #e2e8f0;
+  --app-sidebar-text: #475569;
+  --app-sidebar-muted: #94a3b8;
+  --app-sidebar-hover: #f1f5f9;
+  --app-sidebar-hover-text: #0f172a;
+  --app-sidebar-footer: #64748b;
+  --app-card-shadow: 0 1px 2px rgba(15, 23, 42, .035), 0 8px 24px rgba(15, 23, 42, .045);
+  --app-card-shadow-hover: 0 4px 10px rgba(15, 23, 42, .05), 0 14px 34px rgba(15, 23, 42, .065);
+  --app-topbar-shadow: 0 1px 0 rgba(15, 23, 42, .045), 0 6px 18px rgba(15, 23, 42, .025);
+  --app-table-hover: color-mix(in srgb, var(--p-primary-50) 42%, var(--app-surface) 58%);
+}
+
+.app-dark {
+  --app-page-bg: var(--p-surface-950);
+  --app-sidebar-bg: #0f172a;
+  --app-sidebar-border: #1e293b;
+  --app-sidebar-text: #94a3b8;
+  --app-sidebar-muted: #64748b;
+  --app-sidebar-hover: #1e293b;
+  --app-sidebar-hover-text: #e2e8f0;
+  --app-sidebar-footer: #64748b;
+  --app-card-shadow: 0 1px 3px rgba(0, 0, 0, .18), 0 10px 30px rgba(0, 0, 0, .14);
+  --app-card-shadow-hover: 0 4px 12px rgba(0, 0, 0, .20), 0 16px 36px rgba(0, 0, 0, .18);
+  --app-topbar-shadow: 0 1px 0 rgba(255, 255, 255, .025), 0 8px 22px rgba(0, 0, 0, .12);
+  --app-table-hover: color-mix(in srgb, var(--p-primary-950) 24%, var(--app-surface) 76%);
+}
+
+html,
+body,
+.nav-shell,
+.main-content {
+  background: var(--app-page-bg);
+}
+
+body,
+.card,
+.sidebar,
+.topbar,
+.nav-item,
+.stat-card,
+.p-datatable .p-datatable-tbody > tr {
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+
+/* Sidebar: en modo claro deja de conservar el aspecto oscuro. */
+.sidebar {
+  background: var(--app-sidebar-bg);
+  color: var(--app-text);
+  border-right: 1px solid var(--app-sidebar-border);
+  box-shadow: 8px 0 30px rgba(15, 23, 42, .025);
+}
+
+.app-dark .sidebar {
+  box-shadow: none;
+}
+
+.brand {
+  color: var(--app-text);
+}
+
+.brand small {
+  color: var(--app-sidebar-muted);
+}
+
+.brand-icon {
+  background: linear-gradient(145deg, var(--p-primary-500), var(--p-primary-600));
+  color: var(--p-primary-contrast-color);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--p-primary-color) 24%, transparent);
+}
+
+.nav-label {
+  color: var(--app-sidebar-muted);
+}
+
+.nav-item {
+  color: var(--app-sidebar-text);
+}
+
+.nav-item:hover {
+  background: var(--app-sidebar-hover);
+  color: var(--app-sidebar-hover-text);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, var(--p-primary-500), var(--p-primary-600));
+  color: var(--p-primary-contrast-color);
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--p-primary-color) 22%, transparent);
+}
+
+.sidebar-footer {
+  border-top-color: var(--app-sidebar-border);
+  color: var(--app-sidebar-footer);
+}
+
+/* Header claro con separacion sutil del contenido. */
+.topbar {
+  border-bottom-color: var(--app-border);
+  box-shadow: var(--app-topbar-shadow);
+}
+
+/* Superficies del contenido: mas limpias y con profundidad solo en claro. */
+.card,
+.stat-card {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+  box-shadow: var(--app-card-shadow);
+}
+
+html:not(.app-dark) .card:hover,
+html:not(.app-dark) .stat-card:hover {
+  border-color: color-mix(in srgb, var(--p-primary-color) 14%, var(--app-border));
+  box-shadow: var(--app-card-shadow-hover);
+}
+
+/* Filtros y tablas: mejor diferenciacion en tema claro. */
+.movement-filter-card,
+.analysis-filter {
+  background: color-mix(in srgb, var(--app-surface) 97%, var(--p-primary-50) 3%);
+}
+
+.movement-table-card,
+.analysis-table-card,
+.table-card {
+  background: var(--app-surface);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: color-mix(in srgb, var(--app-surface-soft) 90%, var(--p-primary-50) 10%) !important;
+  color: var(--app-muted) !important;
+  border-color: var(--app-border) !important;
+  font-weight: 800;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-color: var(--app-border) !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--app-table-hover) !important;
+}
+
+/* Evita que los inputs se pierdan sobre tarjetas blancas. */
+html:not(.app-dark) .p-inputtext,
+html:not(.app-dark) .p-select,
+html:not(.app-dark) .p-datepicker-input,
+html:not(.app-dark) .p-inputnumber-input,
+html:not(.app-dark) textarea {
+  border-color: #cbd5e1;
+}
+
+html:not(.app-dark) .p-inputtext:hover,
+html:not(.app-dark) .p-select:hover,
+html:not(.app-dark) .p-datepicker-input:hover,
+html:not(.app-dark) .p-inputnumber-input:hover,
+html:not(.app-dark) textarea:hover {
+  border-color: color-mix(in srgb, var(--p-primary-color) 45%, #cbd5e1);
+}
+
+/* Dashboard: tarjetas financieras con un detalle visual discreto. */
+html:not(.app-dark) .page > .grid.grid-4 > .card {
+  position: relative;
+  overflow: hidden;
+}
+
+html:not(.app-dark) .page > .grid.grid-4 > .card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--p-primary-400), var(--p-primary-600));
+  opacity: .85;
+}
+
+html:not(.app-dark) .page > .grid.grid-4 > .card .stat-value {
+  color: #0f172a;
+}
+
+/* Estado vacio y paneles de detalle tambien se adaptan al claro. */
+html:not(.app-dark) .empty-state,
+html:not(.app-dark) .movement-empty-state {
+  color: #64748b;
+}
+
+html:not(.app-dark) .detail-grid > div,
+html:not(.app-dark) .profile-info > div {
+  background: #f8fafc !important;
+}
+
+/* Barra inferior movil: clara en modo claro y oscura solo en modo oscuro. */
+@media (max-width: 760px) {
+  .sidebar {
+    border-top: 1px solid var(--app-sidebar-border);
+    border-right: 0;
+    box-shadow: 0 -8px 28px rgba(15, 23, 42, .08);
+  }
+
+  .app-dark .sidebar {
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, .24);
+  }
+
+  html:not(.app-dark) .sidebar .nav-item {
+    color: #64748b;
+  }
+
+  html:not(.app-dark) .sidebar .nav-item:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  html:not(.app-dark) .sidebar .nav-item.active {
+    color: var(--p-primary-contrast-color);
+  }
+}
+
+/* =========================================================
+   V7.14 - Formularios compactos + pantallas de gestión + scroll del menú
+   ========================================================= */
+
+/* El menú lateral conserva el footer visible y permite recorrer todas las opciones. */
+.sidebar {
+  overflow: hidden;
+}
+
+.sidebar nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: .22rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--p-primary-color) 45%, var(--app-sidebar-muted)) transparent;
+}
+
+.sidebar nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--p-primary-color) 38%, var(--app-sidebar-muted));
+  border-radius: 999px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--p-primary-color) 58%, var(--app-sidebar-muted));
+}
+
+/* Formularios de diálogos: menos altos, mejor proporción y jerarquía. */
+.p-dialog form .form-grid,
+.compact-form-grid {
+  gap: .8rem .9rem;
+}
+
+.p-dialog form .field {
+  gap: .3rem;
+}
+
+.p-dialog form .field label,
+.professional-dialog .field > label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--app-muted) !important;
+  letter-spacing: .01em;
+}
+
+.p-dialog form .field small {
+  font-size: .72rem;
+  line-height: 1.3;
+}
+
+.p-dialog form .p-inputtext,
+.p-dialog form .p-inputnumber-input,
+.p-dialog form .p-datepicker-input,
+.p-dialog form .p-password-input,
+.p-dialog form textarea {
+  min-height: 38px;
+  height: 38px;
+  padding: .48rem .7rem;
+  border-radius: 9px;
+  font-size: .86rem;
+}
+
+.p-dialog form textarea {
+  height: auto;
+  min-height: 82px;
+}
+
+.p-dialog form .p-select,
+.p-dialog form .p-datepicker,
+.p-dialog form .p-inputnumber,
+.p-dialog form .p-password {
+  min-height: 38px;
+  width: 100%;
+  border-radius: 9px;
+}
+
+.p-dialog form .p-select {
+  height: 38px;
+}
+
+.p-dialog form .p-select-label {
+  padding: .48rem .7rem;
+  font-size: .86rem;
+  display: flex;
+  align-items: center;
+}
+
+.p-dialog form .p-select-dropdown,
+.p-dialog form .p-datepicker-dropdown {
+  width: 2.3rem;
+}
+
+.p-dialog form .p-inputnumber-input,
+.p-dialog form .p-datepicker-input {
+  width: 100%;
+}
+
+.professional-dialog .p-dialog-header {
+  padding: 1rem 1.15rem .8rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.professional-dialog .p-dialog-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -.015em;
+}
+
+.professional-dialog .p-dialog-content {
+  padding: 1rem 1.15rem 1.1rem;
+}
+
+.form-intro {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  margin: 0 0 .9rem;
+  padding: .7rem .8rem;
+  border: 1px solid color-mix(in srgb, var(--p-primary-color) 18%, var(--app-border));
+  background: color-mix(in srgb, var(--p-primary-color) 6%, var(--app-surface));
+  border-radius: 10px;
+  color: var(--app-muted);
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.form-intro i {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 12%, transparent);
+}
+
+.dialog-actions {
+  padding-top: .8rem;
+  margin-top: .8rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.checkbox-row.compact-checkbox {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: 0 .15rem;
+}
+
+.checkbox-row.compact-checkbox label {
+  margin: 0;
+  font-weight: 500 !important;
+  color: var(--app-text) !important;
+}
+
+/* Encabezados y tarjetas resumen para pantallas de gestión. */
+.management-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.management-page .page-header {
+  margin-bottom: .15rem;
+}
+
+.management-heading {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  min-width: 0;
+}
+
+.management-heading h1 {
+  margin: 0;
+}
+
+.management-heading p {
+  margin: .28rem 0 0;
+}
+
+.management-title-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  font-size: 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--p-primary-color) 18%, var(--app-border));
+  color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 9%, var(--app-surface));
+}
+
+.management-title-icon.users {
+  color: #6366f1;
+  background: color-mix(in srgb, #6366f1 10%, var(--app-surface));
+}
+
+.management-title-icon.accounts {
+  color: #0ea5e9;
+  background: color-mix(in srgb, #0ea5e9 10%, var(--app-surface));
+}
+
+.management-title-icon.alerts {
+  color: #f59e0b;
+  background: color-mix(in srgb, #f59e0b 11%, var(--app-surface));
+}
+
+.management-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .85rem;
+}
+
+.summary-card.compact-summary {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .9rem 1rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  box-shadow: var(--app-card-shadow);
+}
+
+.compact-summary .summary-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 10%, transparent);
+}
+
+.compact-summary span,
+.compact-summary strong {
+  display: block;
+}
+
+.compact-summary span {
+  color: var(--app-muted);
+  font-size: .74rem;
+  font-weight: 600;
+}
+
+.compact-summary strong {
+  margin-top: .2rem;
+  color: var(--app-text);
+  font-size: 1.18rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.compact-summary.success .summary-icon {
+  color: #10b981;
+  background: color-mix(in srgb, #10b981 11%, transparent);
+}
+
+.compact-summary.warning .summary-icon {
+  color: #f59e0b;
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+}
+
+.compact-summary.danger .summary-icon {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 11%, transparent);
+}
+
+.compact-summary.muted-card .summary-icon,
+.compact-summary.neutral .summary-icon {
+  color: var(--app-muted);
+  background: var(--app-surface-soft);
+}
+
+.professional-table-card {
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.professional-toolbar {
+  min-height: 64px;
+  align-items: center;
+  background: color-mix(in srgb, var(--app-surface) 97%, var(--p-primary-50) 3%);
+}
+
+.toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.toolbar-title > i {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--p-primary-color);
+  background: color-mix(in srgb, var(--p-primary-color) 9%, transparent);
+}
+
+.toolbar-title strong,
+.toolbar-title span {
+  display: block;
+}
+
+.toolbar-title strong {
+  color: var(--app-text);
+  font-size: .88rem;
+}
+
+.toolbar-title span,
+.toolbar-result {
+  color: var(--app-muted);
+  font-size: .72rem;
+}
+
+.toolbar-result {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .65rem;
+  border-radius: 9px;
+  background: var(--app-surface-soft);
+  border: 1px solid var(--app-border);
+  white-space: nowrap;
+}
+
+.entity-cell {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-width: 0;
+}
+
+.entity-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--p-primary-contrast-color);
+  background: linear-gradient(145deg, var(--p-primary-500), var(--p-primary-600));
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+.entity-avatar.account-avatar {
+  color: #0ea5e9;
+  background: color-mix(in srgb, #0ea5e9 12%, var(--app-surface));
+  border: 1px solid color-mix(in srgb, #0ea5e9 18%, var(--app-border));
+}
+
+.secondary-value {
+  color: var(--app-muted);
+}
+
+.balance-value {
+  color: #10b981;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+  white-space: nowrap;
+}
+
+.management-empty {
+  min-height: 145px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--app-muted);
+}
+
+.management-empty i {
+  font-size: 1.7rem;
+  color: var(--p-primary-color);
+}
+
+.management-empty strong {
+  color: var(--app-text);
+  font-size: .9rem;
+}
+
+.management-empty span {
+  font-size: .75rem;
+}
+
+.detail-profile-head {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 1rem;
+  padding-bottom: .9rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.detail-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--p-primary-contrast-color);
+  background: linear-gradient(145deg, var(--p-primary-500), var(--p-primary-600));
+  font-weight: 800;
+}
+
+.detail-profile-head strong,
+.detail-profile-head span {
+  display: block;
+}
+
+.detail-profile-head strong {
+  color: var(--app-text);
+}
+
+.detail-profile-head span {
+  margin-top: .15rem;
+  color: var(--app-muted);
+  font-size: .75rem;
+}
+
+.confirm-box {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  padding: .8rem;
+  margin-bottom: .9rem;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-soft);
+}
+
+.confirm-box > i {
+  margin-top: .1rem;
+  font-size: 1.1rem;
+}
+
+.confirm-box strong,
+.confirm-box span {
+  display: block;
+}
+
+.confirm-box strong {
+  color: var(--app-text);
+  font-size: .85rem;
+}
+
+.confirm-box span {
+  margin-top: .2rem;
+  color: var(--app-muted);
+  font-size: .75rem;
+  line-height: 1.4;
+}
+
+.danger-confirm {
+  border-color: color-mix(in srgb, #ef4444 24%, var(--app-border));
+  background: color-mix(in srgb, #ef4444 7%, var(--app-surface));
+}
+
+.danger-confirm > i {
+  color: #ef4444;
+}
+
+.success-confirm {
+  border-color: color-mix(in srgb, #10b981 24%, var(--app-border));
+  background: color-mix(in srgb, #10b981 7%, var(--app-surface));
+}
+
+.success-confirm > i {
+  color: #10b981;
+}
+
+.alert-description,
+.date-cell {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.alert-description i {
+  color: #f59e0b;
+}
+
+.date-cell {
+  color: var(--app-muted);
+  white-space: nowrap;
+}
+
+.date-cell i {
+  color: var(--p-primary-color);
+  font-size: .8rem;
+}
+
+.type-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: .25rem .5rem;
+  border-radius: 999px;
+  background: var(--app-surface-soft);
+  border: 1px solid var(--app-border);
+  color: var(--app-muted);
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* Scroll horizontal visible en la navegación móvil. */
+@media (max-width: 760px) {
+  .sidebar {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--p-primary-color) 55%, var(--app-sidebar-muted)) transparent;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: block;
+    height: 4px;
+  }
+
+  .sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--p-primary-color) 48%, var(--app-sidebar-muted));
+    border-radius: 999px;
+  }
+
+  .sidebar nav {
+    flex: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .management-summary-grid {
+    grid-template-columns: 1fr;
+    gap: .65rem;
+  }
+
+  .summary-card.compact-summary {
+    padding: .75rem .85rem;
+  }
+
+  .management-heading {
+    align-items: flex-start;
+  }
+
+  .management-title-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .professional-toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar-result {
+    width: fit-content;
+  }
+
+  /* En móvil se conserva una altura táctil cómoda aunque el formulario sea compacto. */
+  .p-dialog form .p-inputtext,
+  .p-dialog form .p-inputnumber-input,
+  .p-dialog form .p-datepicker-input,
+  .p-dialog form .p-password-input,
+  .p-dialog form .p-select,
+  .p-dialog form .p-datepicker,
+  .p-dialog form .p-inputnumber,
+  .p-dialog form .p-password {
+    min-height: 44px;
+    height: 44px;
+  }
+
+  .p-dialog form .p-select-label {
+    padding-top: .6rem;
+    padding-bottom: .6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .professional-dialog .p-dialog-header {
+    padding: .9rem 1rem .7rem;
+  }
+
+  .professional-dialog .p-dialog-content {
+    padding: .85rem 1rem 1rem;
+  }
+
+  .form-intro {
+    padding: .65rem .7rem;
+  }
+}
