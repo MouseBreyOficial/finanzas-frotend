@@ -2861,3 +2861,65 @@ html:not(.app-dark) .profile-info > div {
     padding: .65rem .7rem;
   }
 }
+
+/* =========================================================
+   AJUSTES MOVILES - OCT 2026
+   - Evita zoom automático al enfocar campos en iPhone/iOS.
+   - Navegación inferior con iconos más pequeños y mayor
+     separación inferior para alejar los botones del gesto
+     del sistema sin reducir el área táctil.
+   ========================================================= */
+@media (max-width: 760px) {
+  /* Safari/iOS hace zoom al enfocar controles con texto menor a 16px.
+     Se fuerza 16px solo en móvil, conservando el tamaño compacto en desktop. */
+  input,
+  textarea,
+  select,
+  .p-inputtext,
+  .p-inputnumber-input,
+  .p-datepicker-input,
+  .p-password-input,
+  .p-select-label,
+  .p-textarea,
+  .p-autocomplete-input,
+  .p-multiselect-label {
+    font-size: 16px !important;
+  }
+
+  /* Barra inferior: misma ubicación fija, pero con más aire debajo.
+     Los botones quedan visualmente un poco más arriba. */
+  body {
+    padding-bottom: calc(102px + env(safe-area-inset-bottom));
+  }
+
+  .sidebar {
+    height: calc(92px + env(safe-area-inset-bottom));
+    padding-top: .35rem;
+    padding-right: .45rem;
+    padding-bottom: calc(.85rem + env(safe-area-inset-bottom));
+    padding-left: .45rem;
+  }
+
+  .sidebar nav {
+    min-height: 66px;
+    align-items: flex-start;
+  }
+
+  .sidebar .nav-item {
+    flex-basis: 72px;
+    height: 66px;
+    min-height: 66px;
+    padding: .45rem .35rem .5rem;
+    gap: .28rem;
+    font-size: .66rem;
+  }
+
+  .sidebar .nav-item span {
+    max-width: 68px;
+    line-height: 1.12;
+  }
+
+  .sidebar .nav-item i {
+    font-size: 1.02rem;
+  }
+}
